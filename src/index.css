@@ -6,6 +6,8 @@
   --cyber-cyan: #00ffff;
   --cyber-gold: #ffd700;
   --cyber-red: #ff3333;
+  --cyber-purple: #9d4edd;
+  --cyber-green: #00ff88;
 }
 
 * {
@@ -46,49 +48,274 @@ body {
   background: #00ffff80;
 }
 
-/* Animations */
+/* ==================== KEYFRAME ANIMATIONS ==================== */
+
+/* Basic Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(100%); }
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Glow & Pulse Effects */
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 5px var(--cyber-cyan); }
-  50% { box-shadow: 0 0 20px var(--cyber-cyan), 0 0 30px var(--cyber-cyan); }
+  50% { box-shadow: 0 0 25px var(--cyber-cyan), 0 0 50px var(--cyber-cyan); }
 }
 
+@keyframes glow {
+  0%, 100% {
+    text-shadow: 0 0 5px currentColor;
+    filter: brightness(1);
+  }
+  50% {
+    text-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+    filter: brightness(1.2);
+  }
+}
+
+/* Shake Animation */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
 }
 
+/* Level Up Animation */
 @keyframes levelUp {
   0% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.2); filter: brightness(2); }
+  50% { transform: scale(1.3); filter: brightness(2); }
   100% { transform: scale(1); filter: brightness(1); }
 }
 
+@keyframes levelNumber {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Coin Animations */
 @keyframes coinSpin {
   0% { transform: rotateY(0deg); }
   100% { transform: rotateY(360deg); }
 }
 
+@keyframes coinBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* Particle Animation */
+@keyframes particle {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx, 50px), var(--ty, -100px)) scale(0);
+  }
+}
+
+@keyframes particleFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(100vh) scale(0);
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100px) scale(1);
+  }
+}
+
+/* Float Up (for XP text) */
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-50px) scale(1.2);
+  }
+}
+
+/* Check Pop */
+@keyframes checkPop {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.3); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+/* Reward Pop */
+@keyframes rewardPop {
+  0% { opacity: 0; transform: scale(0) translateY(20px); }
+  60% { transform: scale(1.1) translateY(-5px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Reward Unlock */
+@keyframes rewardUnlock {
+  0% { transform: scale(0) rotate(-180deg); }
+  50% { transform: scale(1.2) rotate(10deg); }
+  70% { transform: scale(0.9) rotate(-5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Fire Flicker */
+@keyframes fireFlicker {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1);
+  }
+  25% {
+    transform: scale(1.05) rotate(-2deg);
+    filter: brightness(1.1);
+  }
+  50% {
+    transform: scale(1.1) rotate(1deg);
+    filter: brightness(1.2);
+  }
+  75% {
+    transform: scale(1.05) rotate(-1deg);
+    filter: brightness(1.1);
+  }
+}
+
+/* Streak Pop */
+@keyframes streakPop {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Quest Complete */
+@keyframes questComplete {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Heartbeat */
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.3); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.3); }
+  70% { transform: scale(1); }
+}
+
+/* Modal Pop */
+@keyframes modalPop {
+  0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Rank Animations */
+@keyframes rankPulse {
+  0%, 100% { opacity: 0.05; transform: scale(1); }
+  50% { opacity: 0.15; transform: scale(1.1); }
+}
+
+@keyframes rankLine {
+  0% { opacity: 0; transform: scaleY(0); }
+  50% { opacity: 0.5; }
+  100% { opacity: 0; transform: scaleY(1); }
+}
+
+@keyframes rankReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+    letter-spacing: 0.5em;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: 0.1em;
+  }
+}
+
+/* Glitch Effect */
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+/* Shimmer Effect */
+@keyframes shimmer {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Typing Animation */
+@keyframes typing {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ==================== ANIMATION CLASSES ==================== */
+
 .animate-fadeIn {
-  animation: fadeIn 0.3s ease-out forwards;
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
 .animate-slideUp {
   animation: slideUp 0.4s ease-out forwards;
 }
 
+.animate-slideDown {
+  animation: slideDown 0.4s ease-out forwards;
+}
+
+.animate-slideRight {
+  animation: slideRight 0.4s ease-out forwards;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.5s ease-out forwards;
+}
+
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
 }
 
 .animate-shake {
@@ -99,11 +326,93 @@ body {
   animation: levelUp 0.6s ease-in-out;
 }
 
+.animate-levelNumber {
+  animation: levelNumber 0.8s ease-out forwards;
+}
+
 .animate-coinSpin {
   animation: coinSpin 0.5s ease-in-out;
 }
 
-/* Gradient text */
+.animate-coinBounce {
+  animation: coinBounce 0.6s ease-in-out infinite;
+}
+
+.animate-particle {
+  --tx: calc((random() - 0.5) * 200px);
+  --ty: calc(-50px - random() * 100px);
+  animation: particleFloat 2s ease-out forwards;
+}
+
+.animate-floatUp {
+  animation: floatUp 1.5s ease-out forwards;
+}
+
+.animate-checkPop {
+  animation: checkPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.animate-rewardPop {
+  animation: rewardPop 0.5s ease-out forwards;
+}
+
+.animate-rewardUnlock {
+  animation: rewardUnlock 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.animate-fireFlicker {
+  animation: fireFlicker 0.5s ease-in-out infinite;
+}
+
+.animate-streakPop {
+  animation: streakPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.animate-questComplete {
+  animation: questComplete 0.5s ease-out forwards;
+}
+
+.animate-heartbeat {
+  animation: heartbeat 1s ease-in-out infinite;
+}
+
+.animate-modalPop {
+  animation: modalPop 0.3s ease-out forwards;
+}
+
+.animate-rankPulse {
+  animation: rankPulse 2s ease-in-out infinite;
+}
+
+.animate-rankLine {
+  animation: rankLine 1s ease-out forwards;
+}
+
+.animate-rankReveal {
+  animation: rankReveal 0.8s ease-out forwards;
+}
+
+.animate-glitch {
+  animation: glitch 0.3s ease-in-out infinite;
+}
+
+.animate-typing {
+  animation: typing 1s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* ==================== GRADIENT TEXTS ==================== */
+
 .gradient-text {
   background: linear-gradient(135deg, #00ffff, #00ff88);
   -webkit-background-clip: text;
@@ -112,13 +421,21 @@ body {
 }
 
 .gradient-text-gold {
-  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  background: linear-gradient(135deg, #ffd700, #ffaa00, #ffd700);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Glowing borders */
+.gradient-text-fire {
+  background: linear-gradient(135deg, #ff6600, #ff3333, #ff6600);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ==================== GLOWING BORDERS ==================== */
+
 .glow-border-cyan {
   border: 1px solid #00ffff40;
   box-shadow: 0 0 10px #00ffff20, inset 0 0 10px #00ffff10;
@@ -134,7 +451,13 @@ body {
   box-shadow: 0 0 10px #ff333320, inset 0 0 10px #ff333310;
 }
 
-/* Progress bar styles */
+.glow-border-purple {
+  border: 1px solid #9d4edd40;
+  box-shadow: 0 0 10px #9d4edd20, inset 0 0 10px #9d4edd10;
+}
+
+/* ==================== PROGRESS BARS ==================== */
+
 .progress-bar-xp {
   background: linear-gradient(90deg, #00ffff, #00ff88);
   box-shadow: 0 0 10px #00ffff80;
@@ -145,7 +468,8 @@ body {
   box-shadow: 0 0 10px #ff333380;
 }
 
-/* Card hover effect */
+/* ==================== INTERACTIVE ELEMENTS ==================== */
+
 .card-hover {
   transition: all 0.3s ease;
 }
@@ -155,15 +479,94 @@ body {
   box-shadow: 0 0 20px #00ffff30;
 }
 
-/* Button press effect */
+.card-hover:active {
+  transform: translateY(0);
+}
+
+.btn-press {
+  transition: transform 0.1s ease;
+}
+
 .btn-press:active {
   transform: scale(0.95);
 }
 
-/* Heatmap cell colors */
+/* ==================== HEATMAP COLORS ==================== */
+
 .heatmap-0 { background-color: #1a1a2e; }
 .heatmap-1 { background-color: #003333; }
 .heatmap-2 { background-color: #006666; }
 .heatmap-3 { background-color: #009999; }
 .heatmap-4 { background-color: #00cccc; }
-.heatmap-5 { background-color: #00ffff; }
+.heatmap-5 { background-color: #00ffff; box-shadow: 0 0 5px #00ffff; }
+
+/* ==================== SHADOWS ==================== */
+
+.shadow-neon-cyan {
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+.shadow-neon-gold {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.shadow-neon-red {
+  box-shadow: 0 0 20px rgba(255, 51, 51, 0.5);
+}
+
+.shadow-neon-purple {
+  box-shadow: 0 0 20px rgba(157, 78, 221, 0.5);
+}
+
+/* ==================== SAFE AREAS ==================== */
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+
+.text-shadow-glow {
+  text-shadow: 0 0 10px currentColor;
+}
+
+.backdrop-blur-dark {
+  backdrop-filter: blur(10px);
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Selection color */
+::selection {
+  background-color: #00ffff40;
+  color: #ffffff;
+}
+
+/* Focus styles */
+input:focus, textarea:focus, button:focus {
+  outline: none;
+}
+
+/* Disable text selection on buttons */
+button {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Smooth transitions for all interactive elements */
+button, input, textarea, a {
+  transition: all 0.2s ease;
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
