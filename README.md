@@ -91,10 +91,10 @@ This isn't just another todo app. This is your awakening.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/solo-levelling.git
+git clone https://github.com/codedude19/solo-levelup.git
 
 # Navigate to project directory
-cd solo-levelling
+cd solo-levelup
 
 # Install dependencies
 npm install
