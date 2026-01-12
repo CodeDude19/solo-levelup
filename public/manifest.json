@@ -1,0 +1,22 @@
+{
+  "name": "THE SYSTEM",
+  "short_name": "SYSTEM",
+  "description": "RPG-style productivity app - Level up your life",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["productivity", "lifestyle", "games"],
+  "lang": "en",
+  "dir": "ltr"
+}

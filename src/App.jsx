@@ -33,7 +33,12 @@ import {
   VolumeX,
   ChevronLeft,
   User,
-  Crosshair
+  Crosshair,
+  Download,
+  Smartphone,
+  GripVertical,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 
 // ==================== SOUND & HAPTICS SYSTEM ====================
@@ -389,11 +394,189 @@ const RANKS = [
   { name: 'Monarch', minLevel: 100, color: '#ffffff', title: 'Shadow Monarch' }
 ];
 
-const CLASSES = [
-  { id: 'warrior', name: 'Warrior', icon: 'sword', desc: 'Strength through discipline', color: '#ff3333' },
-  { id: 'mage', name: 'Mage', icon: 'zap', desc: 'Knowledge is power', color: '#9d4edd' },
-  { id: 'assassin', name: 'Assassin', icon: 'target', desc: 'Swift and precise', color: '#00ff88' },
-  { id: 'tank', name: 'Tank', icon: 'shield', desc: 'Unbreakable will', color: '#00ffff' }
+// Quest Priority Ranks (Threat Levels)
+const QUEST_RANKS = [
+  { id: 'S', name: 'S-Rank', label: 'CRITICAL', color: '#ff3333', bgColor: 'rgba(255, 51, 51, 0.15)', icon: 'skull', description: 'Boss-level priority', multiplier: 2 },
+  { id: 'A', name: 'A-Rank', label: 'HIGH', color: '#ff6600', bgColor: 'rgba(255, 102, 0, 0.15)', icon: 'flame', description: 'Urgent quest', multiplier: 1.5 },
+  { id: 'B', name: 'B-Rank', label: 'NORMAL', color: '#00ffff', bgColor: 'rgba(0, 255, 255, 0.15)', icon: 'swords', description: 'Standard quest', multiplier: 1 },
+  { id: 'C', name: 'C-Rank', label: 'LOW', color: '#808080', bgColor: 'rgba(128, 128, 128, 0.15)', icon: 'scroll', description: 'When you have time', multiplier: 0.75 }
+];
+
+// ==================== TRACKS SYSTEM ====================
+const TRACKS = [
+  {
+    id: 'custom',
+    name: 'Custom',
+    icon: 'sparkles',
+    desc: 'Build your own path',
+    color: '#00ffff',
+    habits: [],
+    quests: []
+  },
+  {
+    id: 'dsa',
+    name: 'DSA Grind',
+    icon: 'zap',
+    desc: 'Master algorithms, land your dream job',
+    color: '#9d4edd',
+    habits: [
+      { id: 'dsa1', name: '2hr DSA Practice', icon: 'zap' },
+      { id: 'dsa2', name: 'Solve 3 LeetCode Problems', icon: 'target' },
+      { id: 'dsa3', name: 'Review Data Structures', icon: 'scroll' },
+      { id: 'dsa4', name: 'Watch 1 Algorithm Video', icon: 'eye' },
+      { id: 'dsa5', name: 'Practice Mock Interview', icon: 'user' },
+      { id: 'dsa6', name: 'Read Tech Blog/Article', icon: 'scroll' },
+      { id: 'dsa7', name: 'Revise Previous Solutions', icon: 'flame' },
+      { id: 'dsa8', name: 'Study System Design', icon: 'shield' }
+    ],
+    quests: [
+      { name: 'Complete Easy Problem', reward: 30, penalty: 15, goldReward: 5, rank: 'C' },
+      { name: 'Complete Medium Problem', reward: 60, penalty: 30, goldReward: 15, rank: 'B' },
+      { name: 'Complete Hard Problem', reward: 150, penalty: 75, goldReward: 40, rank: 'A' },
+      { name: 'Finish a LeetCode Contest', reward: 200, penalty: 100, goldReward: 50, rank: 'S' },
+      { name: 'Complete a Topic (Arrays/Trees/etc)', reward: 300, penalty: 100, goldReward: 75, rank: 'A' }
+    ],
+    rewards: [
+      // Micro Rewards (Quick Relief)
+      { name: 'Chai Break', cost: 60, icon: 'gift', tier: 'micro' },
+      { name: 'Coffee Shot', cost: 70, icon: 'gift', tier: 'micro' },
+      { name: 'Stretch Break', cost: 50, icon: 'gift', tier: 'micro' },
+      { name: 'Music Boost', cost: 40, icon: 'gift', tier: 'micro' },
+      { name: 'Meme Scroll', cost: 50, icon: 'gift', tier: 'micro' },
+      { name: 'Desk Walk', cost: 40, icon: 'gift', tier: 'micro' },
+      // Medium Rewards (Mental Reset)
+      { name: 'YouTube Clip', cost: 120, icon: 'gift', tier: 'medium' },
+      { name: 'Reddit Scroll', cost: 120, icon: 'gift', tier: 'medium' },
+      { name: 'Podcast Time', cost: 130, icon: 'gift', tier: 'medium' },
+      { name: 'Blog Read', cost: 100, icon: 'gift', tier: 'medium' },
+      { name: 'Coding Video', cost: 150, icon: 'gift', tier: 'medium' },
+      { name: 'Casual Browse', cost: 140, icon: 'gift', tier: 'medium' },
+      // Premium Rewards (High Dopamine)
+      { name: 'Netflix Episode', cost: 250, icon: 'gift', tier: 'premium' },
+      { name: 'Anime Episode', cost: 250, icon: 'gift', tier: 'premium' },
+      { name: 'Gaming Hour', cost: 300, icon: 'gift', tier: 'premium' },
+      { name: 'Movie Night', cost: 500, icon: 'gift', tier: 'premium' },
+      { name: 'Zero Coding Day', cost: 400, icon: 'gift', tier: 'premium' },
+      { name: 'Sleep Late Pass', cost: 350, icon: 'gift', tier: 'premium' },
+      // Legendary (Rare)
+      { name: 'Full Offday', cost: 900, icon: 'gift', tier: 'legendary' },
+      { name: 'Cheat Day', cost: 700, icon: 'gift', tier: 'legendary' }
+    ]
+  },
+  {
+    id: 'lifestyle',
+    name: 'Lifestyle Warrior',
+    icon: 'heart',
+    desc: 'Transform body, mind & soul',
+    color: '#ff3333',
+    habits: [
+      { id: 'life1', name: '1hr Exercise/Gym', icon: 'flame' },
+      { id: 'life2', name: 'Morning Prayer/Meditation', icon: 'eye' },
+      { id: 'life3', name: 'Cold Shower', icon: 'zap' },
+      { id: 'life4', name: 'Walk 10,000 Steps', icon: 'target' },
+      { id: 'life5', name: 'Drink 3L Water', icon: 'heart' },
+      { id: 'life6', name: 'No Smoking/Vaping', icon: 'shield' },
+      { id: 'life7', name: 'Eat Clean (No Junk)', icon: 'star' },
+      { id: 'life8', name: 'Sleep Before 11PM', icon: 'eye' },
+      { id: 'life9', name: 'Wake Before 6AM', icon: 'flame' },
+      { id: 'life10', name: 'Gratitude Journal (3 things)', icon: 'scroll' },
+      { id: 'life11', name: 'No Social Media (Except Work)', icon: 'shield' },
+      { id: 'life12', name: 'Read 30min', icon: 'scroll' },
+      { id: 'life13', name: 'Skincare Routine', icon: 'star' },
+      { id: 'life14', name: 'Take Vitamins/Supplements', icon: 'heart' },
+      { id: 'life15', name: 'Evening Reflection', icon: 'eye' }
+    ],
+    quests: [
+      { name: 'Complete Full Workout', reward: 75, penalty: 40, goldReward: 20, rank: 'B' },
+      { name: 'Hit 15,000 Steps', reward: 100, penalty: 50, goldReward: 25, rank: 'A' },
+      { name: 'Full Day No Sugar', reward: 80, penalty: 40, goldReward: 20, rank: 'B' },
+      { name: 'Week Streak - All Habits', reward: 500, penalty: 200, goldReward: 150, rank: 'S' },
+      { name: 'Deep Clean Room/Space', reward: 60, penalty: 30, goldReward: 15, rank: 'C' }
+    ],
+    rewards: [
+      // Micro Rewards (Daily Comfort)
+      { name: 'Chai Break', cost: 50, icon: 'gift', tier: 'micro' },
+      { name: 'Coffee Cup', cost: 60, icon: 'gift', tier: 'micro' },
+      { name: 'Music Time', cost: 40, icon: 'gift', tier: 'micro' },
+      { name: 'Hot Shower', cost: 80, icon: 'gift', tier: 'micro' },
+      { name: 'Power Nap', cost: 90, icon: 'gift', tier: 'micro' },
+      { name: 'Foam Roll', cost: 60, icon: 'gift', tier: 'micro' },
+      // Medium Rewards (Enjoyment)
+      { name: 'Dessert Bowl', cost: 150, icon: 'gift', tier: 'medium' },
+      { name: 'Smoothie Treat', cost: 130, icon: 'gift', tier: 'medium' },
+      { name: 'Social Scroll', cost: 140, icon: 'gift', tier: 'medium' },
+      { name: 'YouTube Time', cost: 150, icon: 'gift', tier: 'medium' },
+      { name: 'Podcast Walk', cost: 120, icon: 'gift', tier: 'medium' },
+      { name: 'Sauna Time', cost: 180, icon: 'gift', tier: 'medium' },
+      // Premium Rewards (Indulgence)
+      { name: 'Cheat Meal', cost: 300, icon: 'gift', tier: 'premium' },
+      { name: 'Netflix Episode', cost: 220, icon: 'gift', tier: 'premium' },
+      { name: 'Gaming Hour', cost: 280, icon: 'gift', tier: 'premium' },
+      { name: 'Late Night', cost: 260, icon: 'gift', tier: 'premium' },
+      { name: 'Junk Snack', cost: 200, icon: 'gift', tier: 'premium' },
+      { name: 'Restaurant Meal', cost: 350, icon: 'gift', tier: 'premium' },
+      // Legendary (Rare)
+      { name: 'Full Cheat', cost: 700, icon: 'gift', tier: 'legendary' },
+      { name: 'Rest Day', cost: 500, icon: 'gift', tier: 'legendary' }
+    ]
+  },
+  {
+    id: 'entrepreneur',
+    name: 'Entrepreneur',
+    icon: 'crown',
+    desc: 'Build empire, create value',
+    color: '#ffd700',
+    habits: [
+      { id: 'ent1', name: 'Morning Meditation (15min)', icon: 'eye' },
+      { id: 'ent2', name: 'Review Goals & Priorities', icon: 'target' },
+      { id: 'ent3', name: 'Reach Out to 5 Leads', icon: 'zap' },
+      { id: 'ent4', name: '4hr Deep Work Block', icon: 'flame' },
+      { id: 'ent5', name: 'Client Communication', icon: 'scroll' },
+      { id: 'ent6', name: 'Content Creation (Post/Video)', icon: 'star' },
+      { id: 'ent7', name: 'Learn New Skill (30min)', icon: 'scroll' },
+      { id: 'ent8', name: 'Network - Connect with 1 Person', icon: 'user' },
+      { id: 'ent9', name: 'Exercise (45min)', icon: 'flame' },
+      { id: 'ent10', name: 'Evening Prayer/Gratitude', icon: 'eye' },
+      { id: 'ent11', name: 'Healthy Meals Only', icon: 'heart' },
+      { id: 'ent12', name: 'Review Finances/Expenses', icon: 'shield' },
+      { id: 'ent13', name: 'Plan Tomorrow (Night Before)', icon: 'target' }
+    ],
+    quests: [
+      { name: 'Close a Deal/Sale', reward: 200, penalty: 50, goldReward: 100, rank: 'S' },
+      { name: 'Complete Client Project', reward: 300, penalty: 100, goldReward: 150, rank: 'S' },
+      { name: 'Get a New Client Lead', reward: 100, penalty: 30, goldReward: 40, rank: 'B' },
+      { name: 'Launch New Offering/Product', reward: 500, penalty: 150, goldReward: 200, rank: 'S' },
+      { name: 'Hit Revenue Goal (Weekly)', reward: 400, penalty: 150, goldReward: 175, rank: 'A' },
+      { name: 'Viral Content (100+ engagement)', reward: 150, penalty: 50, goldReward: 50, rank: 'A' }
+    ],
+    rewards: [
+      // Micro Rewards (Quick Dopamine)
+      { name: 'Chai Break', cost: 70, icon: 'gift', tier: 'micro' },
+      { name: 'Coffee Cup', cost: 80, icon: 'gift', tier: 'micro' },
+      { name: 'Music Boost', cost: 50, icon: 'gift', tier: 'micro' },
+      { name: 'Desk Walk', cost: 40, icon: 'gift', tier: 'micro' },
+      { name: 'Inspiration Read', cost: 60, icon: 'gift', tier: 'micro' },
+      { name: 'Twitter Scroll', cost: 70, icon: 'gift', tier: 'micro' },
+      // Medium Rewards (Mental Release)
+      { name: 'YouTube Time', cost: 150, icon: 'gift', tier: 'medium' },
+      { name: 'Podcast Time', cost: 140, icon: 'gift', tier: 'medium' },
+      { name: 'Idea Journal', cost: 100, icon: 'gift', tier: 'medium' },
+      { name: 'Casual Browse', cost: 160, icon: 'gift', tier: 'medium' },
+      { name: 'Netflix Clip', cost: 180, icon: 'gift', tier: 'medium' },
+      { name: 'LinkedIn Scroll', cost: 120, icon: 'gift', tier: 'medium' },
+      // Premium Rewards (High Pleasure)
+      { name: 'Netflix Episode', cost: 300, icon: 'gift', tier: 'premium' },
+      { name: 'Anime Episode', cost: 300, icon: 'gift', tier: 'premium' },
+      { name: 'Gaming Hour', cost: 350, icon: 'gift', tier: 'premium' },
+      { name: 'Movie Night', cost: 550, icon: 'gift', tier: 'premium' },
+      { name: 'Restaurant Meal', cost: 400, icon: 'gift', tier: 'premium' },
+      { name: 'Social Night', cost: 450, icon: 'gift', tier: 'premium' },
+      // Legendary (Rare)
+      { name: 'Full Offday', cost: 1000, icon: 'gift', tier: 'legendary' },
+      { name: 'Luxury Buy', cost: 800, icon: 'gift', tier: 'legendary' },
+      { name: 'Weekend Trip', cost: 1500, icon: 'gift', tier: 'legendary' }
+    ]
+  }
 ];
 
 const XP_PER_LEVEL = 1000;
@@ -402,13 +585,7 @@ const MISSED_DAY_PENALTY = 100;
 const MAX_HEALTH = 100;
 const STREAK_BREAK_PENALTY = 20;
 
-const DEFAULT_HABITS = [
-  { id: '1', name: 'Meditate', icon: 'eye' },
-  { id: '2', name: 'Exercise', icon: 'flame' },
-  { id: '3', name: 'Code', icon: 'zap' },
-  { id: '4', name: 'Read', icon: 'scroll' },
-  { id: '5', name: 'Sleep 8h', icon: 'heart' }
-];
+// DEFAULT_HABITS removed - now track-based
 
 // ==================== HELPER FUNCTIONS ====================
 const getToday = () => new Date().toISOString().split('T')[0];
@@ -463,7 +640,7 @@ const getInitialState = () => {
     onboarded: false,
     player: {
       name: 'Hunter',
-      class: 'warrior',
+      track: 'custom',
       totalXp: 0,
       gold: 100,
       health: MAX_HEALTH,
@@ -476,7 +653,7 @@ const getInitialState = () => {
     },
     quests: [],
     questLog: [],
-    habits: DEFAULT_HABITS,
+    habits: [],
     habitLog: {},
     habitStreaks: {},
     vision: {
@@ -487,13 +664,7 @@ const getInitialState = () => {
       { id: '1', name: '1 Episode Netflix', cost: 200, icon: 'gift' },
       { id: '2', name: 'Snack Break', cost: 100, icon: 'gift' },
       { id: '3', name: '30min Gaming', cost: 300, icon: 'gift' }
-    ],
-    boss: {
-      name: 'Weekly Review',
-      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      reward: 500,
-      penalty: 250
-    }
+    ]
   };
 };
 
@@ -775,13 +946,13 @@ const QuestCompleteCelebration = ({ quest, onClose }) => {
 const Onboarding = ({ onComplete }) => {
   const [step, setStep] = useState(0);
   const [playerName, setPlayerName] = useState('');
-  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedTrack, setSelectedTrack] = useState(null);
   const [showAwakening, setShowAwakening] = useState(false);
 
   const steps = [
     'intro',
     'name',
-    'class',
+    'track',
     'explain',
     'awakening'
   ];
@@ -796,9 +967,23 @@ const Onboarding = ({ onComplete }) => {
   };
 
   const handleAwakeningComplete = () => {
+    const track = TRACKS.find(t => t.id === selectedTrack) || TRACKS[0];
     onComplete({
       name: playerName || 'Hunter',
-      class: selectedClass || 'warrior'
+      track: selectedTrack || 'custom',
+      habits: track.habits,
+      quests: track.quests.map(q => ({
+        ...q,
+        id: generateId(),
+        rank: q.rank || 'B',
+        createdAt: new Date().toISOString(),
+        completed: false,
+        failed: false
+      })),
+      rewards: (track.rewards || []).map(r => ({
+        ...r,
+        id: generateId()
+      }))
     });
   };
 
@@ -870,43 +1055,69 @@ const Onboarding = ({ onComplete }) => {
           </div>
         )}
 
-        {/* Step: Class Selection */}
+        {/* Step: Track Selection */}
         {step === 2 && (
           <div className="animate-fadeIn">
             <div className="text-center mb-6">
-              <Shield className="mx-auto text-cyber-cyan mb-4" size={48} />
+              <Target className="mx-auto text-cyber-cyan mb-4" size={48} />
               <h2 className="font-display text-2xl font-bold text-white mb-2">
-                CHOOSE YOUR PATH
+                CHOOSE YOUR TRACK
               </h2>
-              <p className="text-gray-500">Select your discipline archetype</p>
+              <p className="text-gray-500">Select your discipline path</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {CLASSES.map((cls) => (
+            <div className="space-y-3">
+              {TRACKS.map((track, i) => (
                 <button
-                  key={cls.id}
-                  onClick={() => setSelectedClass(cls.id)}
-                  className={`p-4 rounded-xl border-2 transition-all btn-press ${
-                    selectedClass === cls.id
-                      ? 'border-opacity-100 bg-opacity-20'
-                      : 'border-opacity-30 bg-opacity-0 hover:bg-opacity-10'
+                  key={track.id}
+                  onClick={() => {
+                    soundManager.click();
+                    setSelectedTrack(track.id);
+                  }}
+                  className={`w-full p-4 rounded-xl border-2 transition-all btn-press text-left animate-slideRight ${
+                    selectedTrack === track.id
+                      ? 'border-opacity-100'
+                      : 'border-opacity-30 hover:border-opacity-50'
                   }`}
                   style={{
-                    borderColor: cls.color,
-                    backgroundColor: selectedClass === cls.id ? cls.color : 'transparent'
+                    borderColor: track.color,
+                    backgroundColor: selectedTrack === track.id ? `${track.color}20` : 'transparent',
+                    animationDelay: `${i * 0.1}s`
                   }}
                 >
-                  <div
-                    className="w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: `${cls.color}20` }}
-                  >
-                    {cls.icon === 'sword' && <Swords size={24} style={{ color: cls.color }} />}
-                    {cls.icon === 'zap' && <Zap size={24} style={{ color: cls.color }} />}
-                    {cls.icon === 'target' && <Crosshair size={24} style={{ color: cls.color }} />}
-                    {cls.icon === 'shield' && <Shield size={24} style={{ color: cls.color }} />}
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: `${track.color}20` }}
+                    >
+                      {track.icon === 'sparkles' && <Sparkles size={28} style={{ color: track.color }} />}
+                      {track.icon === 'zap' && <Zap size={28} style={{ color: track.color }} />}
+                      {track.icon === 'heart' && <Heart size={28} style={{ color: track.color }} />}
+                      {track.icon === 'crown' && <Crown size={28} style={{ color: track.color }} />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-display font-bold text-white text-lg">{track.name}</p>
+                      <p className="text-gray-400 text-sm">{track.desc}</p>
+                      {track.habits.length > 0 && (
+                        <p className="text-xs mt-1" style={{ color: track.color }}>
+                          {track.habits.length} habits • {track.quests.length} quests pre-loaded
+                        </p>
+                      )}
+                      {track.id === 'custom' && (
+                        <p className="text-xs mt-1 text-gray-500">
+                          Clean slate — add your own habits & quests
+                        </p>
+                      )}
+                    </div>
+                    {selectedTrack === track.id && (
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center animate-checkPop"
+                        style={{ backgroundColor: track.color }}
+                      >
+                        <Check size={18} className="text-black" />
+                      </div>
+                    )}
                   </div>
-                  <p className="font-display font-bold text-white">{cls.name}</p>
-                  <p className="text-gray-500 text-xs mt-1">{cls.desc}</p>
                 </button>
               ))}
             </div>
@@ -1006,9 +1217,9 @@ const Onboarding = ({ onComplete }) => {
       <div className="p-6 safe-area-bottom">
         <button
           onClick={handleNext}
-          disabled={step === 1 && !playerName.trim()}
+          disabled={(step === 1 && !playerName.trim()) || (step === 2 && !selectedTrack)}
           className={`w-full py-4 rounded-xl font-display font-bold text-lg transition-all btn-press ${
-            (step === 1 && !playerName.trim()) || (step === 2 && !selectedClass)
+            (step === 1 && !playerName.trim()) || (step === 2 && !selectedTrack)
               ? 'bg-gray-800 text-gray-600'
               : 'bg-cyber-cyan text-black'
           }`}
@@ -1109,23 +1320,25 @@ const AwakeningSequence = ({ onComplete, playerName }) => {
 // ==================== NOTIFICATION COMPONENT ====================
 const Notification = ({ message, type, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
+    const timer = setTimeout(onClose, 1500);
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const bgColor = type === 'success' ? 'bg-cyber-green/20 border-cyber-green' :
-                  type === 'error' ? 'bg-cyber-red/20 border-cyber-red' :
-                  type === 'gold' ? 'bg-cyber-gold/20 border-cyber-gold' :
-                  'bg-cyber-cyan/20 border-cyber-cyan';
+  const bgColor = type === 'success' ? 'bg-cyber-green/60 border-cyber-green' :
+                  type === 'error' ? 'bg-cyber-red/60 border-cyber-red' :
+                  type === 'gold' ? 'bg-cyber-gold/60 border-cyber-gold' :
+                  'bg-cyber-cyan/60 border-cyber-cyan';
 
-  const textColor = type === 'success' ? 'text-cyber-green' :
-                    type === 'error' ? 'text-cyber-red' :
-                    type === 'gold' ? 'text-cyber-gold' :
-                    'text-cyber-cyan';
+  const textColor = type === 'success' ? 'text-white' :
+                    type === 'error' ? 'text-white' :
+                    type === 'gold' ? 'text-black' :
+                    'text-black';
 
   return (
-    <div className={`fixed top-4 left-4 right-4 z-40 p-4 rounded-lg border ${bgColor} animate-slideDown`}>
-      <p className={`text-center font-bold ${textColor}`}>{message}</p>
+    <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none px-4">
+      <div className={`px-6 py-3 rounded-xl border-2 ${bgColor} animate-scaleIn backdrop-blur-sm`}>
+        <p className={`text-center font-bold ${textColor}`}>{message}</p>
+      </div>
     </div>
   );
 };
@@ -1149,13 +1362,30 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 
 // ==================== PLAYER DASHBOARD ====================
 const Dashboard = ({ state, onLoginReward, showNotification, triggerCelebration, soundEnabled, onToggleSound }) => {
-  const { player, quests, boss } = state;
+  const { player, quests } = state;
   const level = calculateLevel(player.totalXp);
   const xpProgress = calculateXpProgress(player.totalXp);
   const rank = getRank(level);
   const nextRank = getNextRank(level);
-  const activeQuests = quests.filter(q => !q.completed && !q.failed);
+
+  // Sort quests by priority (S > A > B > C)
+  const rankOrder = { 'S': 0, 'A': 1, 'B': 2, 'C': 3 };
+  const activeQuests = quests
+    .filter(q => !q.completed && !q.failed)
+    .sort((a, b) => {
+      const rankA = rankOrder[a.rank] ?? 2;
+      const rankB = rankOrder[b.rank] ?? 2;
+      if (rankA !== rankB) return rankA - rankB;
+      return new Date(a.createdAt) - new Date(b.createdAt);
+    });
+
+  const topQuest = activeQuests[0];
+  const getQuestRankInfo = (rankId) => {
+    return QUEST_RANKS.find(r => r.id === rankId) || QUEST_RANKS[2];
+  };
+
   const [showCheckinAnim, setShowCheckinAnim] = useState(false);
+  const [showRanksModal, setShowRanksModal] = useState(false);
 
   const handleCheckIn = () => {
     if (!player.checkedInToday) {
@@ -1165,10 +1395,10 @@ const Dashboard = ({ state, onLoginReward, showNotification, triggerCelebration,
     }
   };
 
-  const selectedClass = CLASSES.find(c => c.id === player.class) || CLASSES[0];
+  const selectedTrack = TRACKS.find(t => t.id === player.track) || TRACKS[0];
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto pb-4 px-4">
+    <div className="h-full overflow-y-auto pb-4 px-4">
       {/* Checkin Animation */}
       {showCheckinAnim && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-fadeIn">
@@ -1198,45 +1428,110 @@ const Dashboard = ({ state, onLoginReward, showNotification, triggerCelebration,
             THE SYSTEM
           </h1>
           <p className="text-gray-500 text-xs tracking-widest">ARISE, {player.name?.toUpperCase()}</p>
+          <p className="text-xs mt-1" style={{ color: selectedTrack.color }}>
+            {selectedTrack.name} Track
+          </p>
         </div>
       </div>
 
-      {/* Player Card */}
-      <div className="bg-cyber-dark rounded-xl p-5 glow-border-cyan mb-4 relative overflow-hidden">
-        {/* Class indicator */}
+      {/* Ranks Modal */}
+      {showRanksModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 animate-fadeIn" onClick={() => setShowRanksModal(false)}>
+          <div className="w-full max-w-sm bg-cyber-dark border border-cyber-cyan/30 rounded-xl p-4 animate-modalPop" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display font-bold text-cyber-cyan flex items-center gap-2">
+                <Crown size={18} /> Hunter Ranks
+              </h3>
+              <button onClick={() => setShowRanksModal(false)} className="text-gray-500 hover:text-white p-1">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="space-y-2">
+              {RANKS.map((r, i) => {
+                const isCurrentRank = r.name === rank.name;
+                const isUnlocked = level >= r.minLevel;
+                return (
+                  <div
+                    key={r.name}
+                    className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
+                      isCurrentRank ? 'bg-cyber-cyan/10 border border-cyber-cyan/30' : 'bg-cyber-gray/30'
+                    } ${!isUnlocked ? 'opacity-50' : ''}`}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                      style={{ backgroundColor: `${r.color}20`, color: r.color }}
+                    >
+                      {r.minLevel}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-display font-bold text-sm" style={{ color: r.color }}>{r.name}</p>
+                      <p className="text-gray-500 text-xs">{r.title}</p>
+                    </div>
+                    {isCurrentRank && (
+                      <span className="text-cyber-cyan text-xs font-bold bg-cyber-cyan/20 px-2 py-0.5 rounded">YOU</span>
+                    )}
+                    {!isUnlocked && (
+                      <span className="text-gray-600 text-xs">Lv.{r.minLevel}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Player Card - Compact */}
+      <div className="bg-cyber-dark rounded-xl p-4 glow-border-cyan mb-4 relative overflow-hidden">
+        {/* Track indicator */}
         <div
-          className="absolute top-0 right-0 w-20 h-20 opacity-10"
+          className="absolute top-0 right-0 w-16 h-16 opacity-10"
           style={{
-            background: `radial-gradient(circle at top right, ${selectedClass.color}, transparent 70%)`
+            background: `radial-gradient(circle at top right, ${selectedTrack.color}, transparent 70%)`
           }}
         />
 
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Current Rank</p>
-            <h2
-              className="font-display text-2xl font-bold animate-glow"
-              style={{ color: rank.color }}
+        {/* Rank & Level Row - Compact */}
+        <div className="flex items-center gap-3 mb-3">
+          {/* Clickable Rank Badge */}
+          <button
+            onClick={() => {
+              soundManager.click();
+              setShowRanksModal(true);
+            }}
+            className="flex items-center gap-2 bg-cyber-gray/50 rounded-lg px-3 py-2 hover:bg-cyber-gray/70 transition-all btn-press"
+          >
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: `${rank.color}20` }}
             >
-              {rank.name}
-            </h2>
-            <p className="text-gray-500 text-xs">{rank.title}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Level</p>
-            <p className="font-display text-4xl font-black text-white">{level}</p>
+              <Crown size={16} style={{ color: rank.color }} />
+            </div>
+            <div className="text-left">
+              <p className="font-display font-bold text-sm" style={{ color: rank.color }}>{rank.name}</p>
+              <p className="text-gray-500 text-[10px]">{rank.title}</p>
+            </div>
+            <ChevronRight size={14} className="text-gray-500 ml-1" />
+          </button>
+
+          {/* Level */}
+          <div className="flex-1 text-right">
+            <p className="text-gray-500 text-[10px] uppercase tracking-wider">Level</p>
+            <p className="font-display text-3xl font-black text-white leading-none">{level}</p>
           </div>
         </div>
 
         {/* XP Bar */}
-        <div className="mb-4">
+        <div className="mb-3">
           <div className="flex justify-between text-xs mb-1">
             <span className="text-cyber-cyan flex items-center gap-1">
-              <Zap size={12} /> XP
+              <Zap size={10} /> {xpProgress} / {XP_PER_LEVEL}
             </span>
-            <span className="text-gray-400">{xpProgress} / {XP_PER_LEVEL}</span>
+            {nextRank && (
+              <span className="text-gray-500 text-[10px]">{nextRank.name} @ Lv.{nextRank.minLevel}</span>
+            )}
           </div>
-          <div className="h-3 bg-cyber-gray rounded-full overflow-hidden relative">
+          <div className="h-2 bg-cyber-gray rounded-full overflow-hidden relative">
             <div
               className="h-full progress-bar-xp transition-all duration-500 rounded-full relative"
               style={{ width: `${(xpProgress / XP_PER_LEVEL) * 100}%` }}
@@ -1244,28 +1539,17 @@ const Dashboard = ({ state, onLoginReward, showNotification, triggerCelebration,
               <div className="absolute inset-0 animate-shimmer" />
             </div>
           </div>
-          {nextRank && (
-            <p className="text-gray-600 text-xs mt-1 text-right">
-              Next: {nextRank.name} at Lv.{nextRank.minLevel}
-            </p>
-          )}
         </div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-cyber-gray/50 rounded-lg p-3 text-center relative overflow-hidden group">
-            <div className="flex items-center justify-center gap-2 text-cyber-gold mb-1">
-              <Coins size={16} className="group-hover:animate-coinBounce" />
-              <span className="font-display font-bold text-lg">{player.gold}</span>
-            </div>
-            <p className="text-gray-500 text-xs">Gold</p>
+        {/* Stats Row - Compact */}
+        <div className="flex gap-2">
+          <div className="flex-1 bg-cyber-gray/50 rounded-lg px-3 py-2 flex items-center justify-center gap-2">
+            <Coins size={14} className="text-cyber-gold" />
+            <span className="font-display font-bold text-cyber-gold">{player.gold}</span>
           </div>
-          <div className="bg-cyber-gray/50 rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center gap-2 text-cyber-red mb-1">
-              <Heart size={16} className={player.health < 30 ? 'animate-heartbeat' : ''} />
-              <span className="font-display font-bold text-lg">{player.health}%</span>
-            </div>
-            <p className="text-gray-500 text-xs">Health</p>
+          <div className="flex-1 bg-cyber-gray/50 rounded-lg px-3 py-2 flex items-center justify-center gap-2">
+            <Heart size={14} className={`text-cyber-red ${player.health < 30 ? 'animate-heartbeat' : ''}`} />
+            <span className="font-display font-bold text-cyber-red">{player.health}%</span>
           </div>
         </div>
       </div>
@@ -1294,44 +1578,51 @@ const Dashboard = ({ state, onLoginReward, showNotification, triggerCelebration,
         )}
       </button>
 
-      {/* Boss Countdown */}
-      <div className="bg-cyber-dark rounded-xl p-4 glow-border-red mb-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyber-red/5 to-transparent animate-pulse" />
+      {/* Top Priority Quest */}
+      {topQuest ? (
+        <div
+          className="bg-cyber-dark rounded-xl p-4 mb-4 relative overflow-hidden"
+          style={{
+            borderLeft: `3px solid ${getQuestRankInfo(topQuest.rank).color}`,
+            boxShadow: topQuest.rank === 'S' ? `0 0 20px ${getQuestRankInfo(topQuest.rank).color}30` : undefined
+          }}
+        >
+          {topQuest.rank === 'S' && (
+            <div
+              className="absolute inset-0 opacity-10 animate-pulse"
+              style={{ background: `linear-gradient(90deg, ${getQuestRankInfo(topQuest.rank).color}20, transparent)` }}
+            />
+          )}
 
-        <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-cyber-red/20 flex items-center justify-center">
-              <Skull className="text-cyber-red animate-pulse" size={24} />
+          <div className="flex items-center gap-3 relative z-10">
+            <div
+              className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: getQuestRankInfo(topQuest.rank).bgColor }}
+            >
+              <span className="font-display font-black text-xl" style={{ color: getQuestRankInfo(topQuest.rank).color }}>
+                {topQuest.rank || 'B'}
+              </span>
             </div>
-            <div>
-              <p className="text-gray-400 text-xs uppercase tracking-wider">Next Boss</p>
-              <p className="font-display font-bold text-white">{boss.name}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-gray-400 text-xs uppercase tracking-wider">Top Priority</p>
+              <p className="font-display font-bold text-white truncate">{topQuest.name}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-cyber-cyan text-xs flex items-center gap-1">
+                  <Zap size={10} /> {topQuest.reward} XP
+                </span>
+                <span className="text-cyber-gold text-xs flex items-center gap-1">
+                  <Coins size={10} /> {topQuest.goldReward}
+                </span>
+              </div>
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-cyber-red font-display font-bold text-xl">
-              {formatTimeRemaining(boss.deadline)}
-            </p>
-            <p className="text-gray-500 text-xs">+{boss.reward} Gold</p>
-          </div>
         </div>
-      </div>
-
-      {/* Stats Summary */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        <div className="bg-cyber-dark rounded-lg p-3 text-center glow-border-cyan">
-          <p className="font-display text-xl font-bold text-cyber-cyan">{player.totalQuestsCompleted}</p>
-          <p className="text-gray-500 text-xs">Quests</p>
+      ) : (
+        <div className="bg-cyber-dark rounded-xl p-4 mb-4 border border-dashed border-gray-700 text-center">
+          <p className="text-gray-500 text-sm">No active quests</p>
+          <p className="text-gray-600 text-xs">Create a quest to get started!</p>
         </div>
-        <div className="bg-cyber-dark rounded-lg p-3 text-center glow-border-gold">
-          <p className="font-display text-xl font-bold text-cyber-gold">{player.totalHabitsCompleted}</p>
-          <p className="text-gray-500 text-xs">Habits</p>
-        </div>
-        <div className="bg-cyber-dark rounded-lg p-3 text-center glow-border-red">
-          <p className="font-display text-xl font-bold text-orange-500">{player.longestStreak}</p>
-          <p className="text-gray-500 text-xs">Best Streak</p>
-        </div>
-      </div>
+      )}
 
       {/* Active Quests Summary */}
       <div className="bg-cyber-dark rounded-xl p-4 glow-border-cyan">
@@ -1368,64 +1659,193 @@ const Dashboard = ({ state, onLoginReward, showNotification, triggerCelebration,
 };
 
 // ==================== QUESTS SYSTEM ====================
-const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, onDeleteQuest, showNotification }) => {
+const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, onDeleteQuest, onReorderQuest, showNotification }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showLog, setShowLog] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [showIntro, setShowIntro] = useState(() => {
+    return !localStorage.getItem('questIntroSeen');
+  });
   const [newQuest, setNewQuest] = useState({
     name: '',
     reward: 50,
     penalty: 25,
     timeBlock: '',
-    goldReward: 10
+    goldReward: 10,
+    rank: 'B'
   });
 
-  const activeQuests = state.quests.filter(q => !q.completed && !q.failed);
+  // Get active quests sorted by rank priority
+  const rankOrder = { 'S': 0, 'A': 1, 'B': 2, 'C': 3 };
+  const activeQuests = state.quests
+    .filter(q => !q.completed && !q.failed)
+    .sort((a, b) => {
+      const rankA = rankOrder[a.rank] ?? 2;
+      const rankB = rankOrder[b.rank] ?? 2;
+      if (rankA !== rankB) return rankA - rankB;
+      return new Date(a.createdAt) - new Date(b.createdAt);
+    });
+
+  const getQuestRankInfo = (rankId) => {
+    return QUEST_RANKS.find(r => r.id === rankId) || QUEST_RANKS[2];
+  };
+
+  const getRankIcon = (rankId) => {
+    switch (rankId) {
+      case 'S': return <Skull size={14} />;
+      case 'A': return <Flame size={14} />;
+      case 'B': return <Swords size={14} />;
+      case 'C': return <Scroll size={14} />;
+      default: return <Swords size={14} />;
+    }
+  };
 
   const handleAddQuest = () => {
     if (!newQuest.name.trim()) return;
+    const rankInfo = getQuestRankInfo(newQuest.rank);
+    const baseReward = parseInt(newQuest.reward) || 50;
+    const baseGold = parseInt(newQuest.goldReward) || 10;
+    const basePenalty = parseInt(newQuest.penalty) || 25;
+
     onAddQuest({
       id: generateId(),
       name: newQuest.name,
-      reward: parseInt(newQuest.reward) || 50,
-      penalty: parseInt(newQuest.penalty) || 25,
-      goldReward: parseInt(newQuest.goldReward) || 10,
+      reward: Math.round(baseReward * rankInfo.multiplier),
+      penalty: Math.round(basePenalty * rankInfo.multiplier),
+      goldReward: Math.round(baseGold * rankInfo.multiplier),
       timeBlock: newQuest.timeBlock,
+      rank: newQuest.rank,
       createdAt: new Date().toISOString(),
       completed: false,
       failed: false
     });
-    setNewQuest({ name: '', reward: 50, penalty: 25, timeBlock: '', goldReward: 10 });
+    setNewQuest({ name: '', reward: 50, penalty: 25, timeBlock: '', goldReward: 10, rank: 'B' });
     setShowAddModal(false);
+    soundManager.success();
     showNotification('Quest Added!', 'success');
   };
 
+  const handleMoveQuest = (quest, direction) => {
+    soundManager.click();
+    const currentIndex = activeQuests.findIndex(q => q.id === quest.id);
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= activeQuests.length) return;
+    const targetQuest = activeQuests[newIndex];
+    if (onReorderQuest) {
+      onReorderQuest(quest.id, targetQuest.rank, targetQuest.id, quest.rank);
+    }
+  };
+
+  const handleDismissIntro = () => {
+    soundManager.click();
+    setShowIntro(false);
+    localStorage.setItem('questIntroSeen', 'true');
+  };
+
   return (
-    <div className="flex flex-col h-full pb-4 px-4">
-      {/* Header */}
-      <div className="flex items-center justify-between py-4">
-        <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
-          <Swords className="text-cyber-cyan" /> Quests
-        </h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowLog(!showLog)}
-            className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${
-              showLog ? 'bg-cyber-cyan text-black' : 'bg-cyber-gray text-gray-400'
-            }`}
-          >
-            <Scroll size={16} />
-          </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-cyber-cyan text-black px-4 py-2 rounded-lg font-bold flex items-center gap-1 btn-press hover:shadow-neon-cyan transition-all"
-          >
-            <Plus size={16} /> New
-          </button>
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* First-time Intro Modal */}
+      {showIntro && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 animate-fadeIn">
+          <div className="w-full max-w-sm bg-cyber-dark border border-cyber-cyan/30 rounded-xl p-6 animate-modalPop">
+            <div className="flex items-center justify-center gap-2 text-cyber-cyan mb-4">
+              <Swords size={28} />
+              <h3 className="font-display font-bold text-xl">QUESTS</h3>
+            </div>
+
+            <p className="text-gray-300 text-sm text-center mb-5">
+              Quests are your tasks. Complete them to earn XP and Gold. Fail or skip them and face penalties.
+            </p>
+
+            <div className="space-y-3 mb-5">
+              <div className="flex items-start gap-3 bg-cyber-gray/30 rounded-lg p-3">
+                <div className="w-8 h-8 rounded-lg bg-cyber-red/20 flex items-center justify-center flex-shrink-0">
+                  <Skull size={16} className="text-cyber-red" />
+                </div>
+                <div>
+                  <p className="text-white text-sm font-bold">Set Priority (S/A/B/C)</p>
+                  <p className="text-gray-500 text-xs">S-Rank = Critical, C-Rank = Low. Higher ranks give more rewards!</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 bg-cyber-gray/30 rounded-lg p-3">
+                <div className="w-8 h-8 rounded-lg bg-cyber-cyan/20 flex items-center justify-center flex-shrink-0">
+                  <ChevronUp size={16} className="text-cyber-cyan" />
+                </div>
+                <div>
+                  <p className="text-white text-sm font-bold">Reorder Quests</p>
+                  <p className="text-gray-500 text-xs">Use the up/down arrows to change quest order and swap priorities.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 bg-cyber-gray/30 rounded-lg p-3">
+                <div className="w-8 h-8 rounded-lg bg-cyber-red/20 flex items-center justify-center flex-shrink-0">
+                  <Trash2 size={16} className="text-cyber-red" />
+                </div>
+                <div>
+                  <p className="text-white text-sm font-bold">Delete Quests</p>
+                  <p className="text-gray-500 text-xs">Tap the trash icon on any quest to remove it (no penalty).</p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleDismissIntro}
+              className="w-full py-3 rounded-lg bg-cyber-cyan text-black font-bold btn-press hover:shadow-neon-cyan transition-all"
+            >
+              Got it!
+            </button>
+          </div>
         </div>
+      )}
+
+      {/* Sticky Header */}
+      <div className="flex-shrink-0 px-4 bg-black">
+        <div className="flex items-center justify-between py-4">
+          <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
+            <Swords className="text-cyber-cyan" /> Quests
+          </h2>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowLog(!showLog)}
+              className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${
+                showLog ? 'bg-cyber-cyan text-black' : 'bg-cyber-gray text-gray-400'
+              }`}
+            >
+              <Scroll size={16} />
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-cyber-cyan text-black px-4 py-2 rounded-lg font-bold flex items-center gap-1 btn-press hover:shadow-neon-cyan transition-all"
+            >
+              <Plus size={16} /> New
+            </button>
+          </div>
+        </div>
+
+        {/* Threat Level Legend */}
+        {!showLog && activeQuests.length > 0 && (
+          <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
+            {QUEST_RANKS.map(rank => {
+              const count = activeQuests.filter(q => q.rank === rank.id).length;
+              return (
+                <div
+                  key={rank.id}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap"
+                  style={{ backgroundColor: rank.bgColor, color: rank.color, opacity: count > 0 ? 1 : 0.4 }}
+                >
+                  {getRankIcon(rank.id)}
+                  <span>{rank.id}</span>
+                  {count > 0 && <span className="opacity-70">({count})</span>}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Quest List or Log */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto px-4 pb-4">
         {showLog ? (
           // Quest Log
           <div className="space-y-3">
@@ -1433,31 +1853,44 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
             {state.questLog.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No completed quests yet.</p>
             ) : (
-              state.questLog.slice().reverse().map((quest, i) => (
-                <div
-                  key={quest.id}
-                  className={`bg-cyber-dark rounded-lg p-4 border animate-fadeIn ${
-                    quest.completed ? 'border-cyber-green/30' : 'border-cyber-red/30'
-                  }`}
-                  style={{ animationDelay: `${i * 0.05}s` }}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-white font-medium">{quest.name}</span>
-                    {quest.completed ? (
-                      <span className="text-cyber-green text-xs font-bold flex items-center gap-1">
-                        <Check size={14} /> +{quest.reward} XP
-                      </span>
-                    ) : (
-                      <span className="text-cyber-red text-xs font-bold flex items-center gap-1">
-                        <X size={14} /> -{quest.penaltyApplied} XP
-                      </span>
-                    )}
+              state.questLog.slice().reverse().map((quest, i) => {
+                const rankInfo = getQuestRankInfo(quest.rank);
+                return (
+                  <div
+                    key={quest.id}
+                    className={`bg-cyber-dark rounded-lg p-4 border animate-fadeIn ${
+                      quest.completed ? 'border-cyber-green/30' : 'border-cyber-red/30'
+                    }`}
+                    style={{ animationDelay: `${i * 0.05}s` }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {quest.rank && (
+                          <span
+                            className="px-2 py-0.5 rounded text-xs font-bold"
+                            style={{ backgroundColor: rankInfo.bgColor, color: rankInfo.color }}
+                          >
+                            {quest.rank}
+                          </span>
+                        )}
+                        <span className="text-white font-medium">{quest.name}</span>
+                      </div>
+                      {quest.completed ? (
+                        <span className="text-cyber-green text-xs font-bold flex items-center gap-1">
+                          <Check size={14} /> +{quest.reward} XP
+                        </span>
+                      ) : (
+                        <span className="text-cyber-red text-xs font-bold flex items-center gap-1">
+                          <X size={14} /> -{quest.penaltyApplied} XP
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-500 text-xs mt-1">
+                      {new Date(quest.completedAt).toLocaleDateString()}
+                    </p>
                   </div>
-                  <p className="text-gray-500 text-xs mt-1">
-                    {new Date(quest.completedAt).toLocaleDateString()}
-                  </p>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         ) : (
@@ -1470,63 +1903,165 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
                 <p className="text-gray-600 text-sm">Create a quest to begin your journey.</p>
               </div>
             ) : (
-              activeQuests.map((quest, i) => (
-                <div
-                  key={quest.id}
-                  className="bg-cyber-dark rounded-xl p-4 glow-border-cyan card-hover animate-slideUp"
-                  style={{ animationDelay: `${i * 0.1}s` }}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h4 className="font-bold text-white mb-1">{quest.name}</h4>
-                      {quest.timeBlock && (
-                        <p className="text-gray-500 text-xs flex items-center gap-1">
-                          <Clock size={12} /> {quest.timeBlock}
-                        </p>
-                      )}
+              activeQuests.map((quest, i) => {
+                const rankInfo = getQuestRankInfo(quest.rank);
+                const isFirst = i === 0;
+                const isLast = i === activeQuests.length - 1;
+
+                return (
+                  <div
+                    key={quest.id}
+                    className="bg-cyber-dark rounded-xl overflow-hidden animate-slideUp relative"
+                    style={{
+                      animationDelay: `${i * 0.05}s`,
+                      borderLeft: `3px solid ${rankInfo.color}`,
+                      boxShadow: quest.rank === 'S' ? `0 0 20px ${rankInfo.color}30` : undefined
+                    }}
+                  >
+                    {/* Rank Glow Effect for S-Rank */}
+                    {quest.rank === 'S' && (
+                      <div
+                        className="absolute inset-0 opacity-10 animate-pulse"
+                        style={{ background: `linear-gradient(90deg, ${rankInfo.color}20, transparent)` }}
+                      />
+                    )}
+
+                    <div className="p-4 relative">
+                      {/* Quest Header */}
+                      <div className="flex items-start gap-3 mb-3">
+                        {/* Priority Controls */}
+                        <div className="flex flex-col gap-1">
+                          <button
+                            onClick={() => handleMoveQuest(quest, 'up')}
+                            disabled={isFirst}
+                            className={`p-1 rounded transition-all ${
+                              isFirst
+                                ? 'text-gray-700 cursor-not-allowed'
+                                : 'text-gray-500 hover:text-cyber-cyan hover:bg-cyber-cyan/10'
+                            }`}
+                          >
+                            <ChevronUp size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleMoveQuest(quest, 'down')}
+                            disabled={isLast}
+                            className={`p-1 rounded transition-all ${
+                              isLast
+                                ? 'text-gray-700 cursor-not-allowed'
+                                : 'text-gray-500 hover:text-cyber-cyan hover:bg-cyber-cyan/10'
+                            }`}
+                          >
+                            <ChevronDown size={16} />
+                          </button>
+                        </div>
+
+                        {/* Rank Badge */}
+                        <div
+                          className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0"
+                          style={{ backgroundColor: rankInfo.bgColor }}
+                        >
+                          <span className="font-display font-black text-lg" style={{ color: rankInfo.color }}>
+                            {quest.rank || 'B'}
+                          </span>
+                        </div>
+
+                        {/* Quest Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <h4 className="font-bold text-white mb-0.5 leading-tight">{quest.name}</h4>
+                              <p className="text-xs" style={{ color: rankInfo.color }}>
+                                {rankInfo.label} PRIORITY
+                              </p>
+                            </div>
+                            {deleteConfirm === quest.id ? (
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                <button
+                                  onClick={() => {
+                                    soundManager.click();
+                                    onDeleteQuest(quest.id);
+                                    setDeleteConfirm(null);
+                                  }}
+                                  className="text-xs bg-cyber-red text-white px-2 py-1 rounded font-bold"
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    soundManager.click();
+                                    setDeleteConfirm(null);
+                                  }}
+                                  className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded"
+                                >
+                                  No
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  soundManager.click();
+                                  setDeleteConfirm(quest.id);
+                                }}
+                                className="text-gray-600 hover:text-cyber-red p-1 transition-colors flex-shrink-0"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+                          {quest.timeBlock && (
+                            <p className="text-gray-500 text-xs flex items-center gap-1 mt-1">
+                              <Clock size={10} /> {quest.timeBlock}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Rewards Row */}
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="bg-cyber-cyan/20 text-cyber-cyan px-2 py-1 rounded flex items-center gap-1">
+                          <Zap size={10} /> {quest.reward} XP
+                        </span>
+                        <span className="bg-cyber-gold/20 text-cyber-gold px-2 py-1 rounded flex items-center gap-1">
+                          <Coins size={10} /> {quest.goldReward}
+                        </span>
+                        <span className="bg-cyber-red/20 text-cyber-red px-2 py-1 rounded">
+                          -{quest.penalty}
+                        </span>
+                        {rankInfo.multiplier > 1 && (
+                          <span className="text-gray-500 text-[10px]">
+                            ({rankInfo.multiplier}x)
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Separator */}
+                      <div className="border-t border-dashed border-gray-700/50 my-3" />
+
+                      {/* Action Buttons */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          onClick={() => onCompleteQuest(quest)}
+                          className="bg-cyber-green/20 text-cyber-green py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 btn-press hover:bg-cyber-green/30 hover:shadow-lg transition-all"
+                        >
+                          <Check size={14} /> Done
+                        </button>
+                        <button
+                          onClick={() => onSkipQuest(quest)}
+                          className="bg-cyber-gold/20 text-cyber-gold py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 btn-press hover:bg-cyber-gold/30 transition-all"
+                        >
+                          <SkipForward size={14} /> Skip
+                        </button>
+                        <button
+                          onClick={() => onFailQuest(quest)}
+                          className="bg-cyber-red/20 text-cyber-red py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 btn-press hover:bg-cyber-red/30 transition-all"
+                        >
+                          <X size={14} /> Fail
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => onDeleteQuest(quest.id)}
-                      className="text-gray-600 hover:text-cyber-red p-1 transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
                   </div>
-
-                  <div className="flex items-center gap-2 mb-3 text-xs">
-                    <span className="bg-cyber-cyan/20 text-cyber-cyan px-2 py-1 rounded">
-                      +{quest.reward} XP
-                    </span>
-                    <span className="bg-cyber-gold/20 text-cyber-gold px-2 py-1 rounded">
-                      +{quest.goldReward} Gold
-                    </span>
-                    <span className="bg-cyber-red/20 text-cyber-red px-2 py-1 rounded">
-                      -{quest.penalty} Penalty
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      onClick={() => onCompleteQuest(quest)}
-                      className="bg-cyber-green/20 text-cyber-green py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 btn-press hover:bg-cyber-green/30 hover:shadow-lg transition-all"
-                    >
-                      <Check size={14} /> Done
-                    </button>
-                    <button
-                      onClick={() => onSkipQuest(quest)}
-                      className="bg-cyber-gold/20 text-cyber-gold py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 btn-press hover:bg-cyber-gold/30 transition-all"
-                    >
-                      <SkipForward size={14} /> Skip
-                    </button>
-                    <button
-                      onClick={() => onFailQuest(quest)}
-                      className="bg-cyber-red/20 text-cyber-red py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 btn-press hover:bg-cyber-red/30 transition-all"
-                    >
-                      <X size={14} /> Fail
-                    </button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
@@ -1535,6 +2070,36 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
       {/* Add Quest Modal */}
       <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="New Quest">
         <div className="space-y-4">
+          {/* Threat Level Selector */}
+          <div>
+            <label className="text-gray-400 text-xs uppercase tracking-wider block mb-2">Threat Level</label>
+            <div className="grid grid-cols-4 gap-2">
+              {QUEST_RANKS.map(rank => (
+                <button
+                  key={rank.id}
+                  onClick={() => setNewQuest({ ...newQuest, rank: rank.id })}
+                  className={`p-3 rounded-lg border-2 transition-all btn-press ${
+                    newQuest.rank === rank.id ? 'scale-105' : 'opacity-60 hover:opacity-80'
+                  }`}
+                  style={{
+                    borderColor: newQuest.rank === rank.id ? rank.color : 'transparent',
+                    backgroundColor: rank.bgColor
+                  }}
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="font-display font-black text-lg" style={{ color: rank.color }}>
+                      {rank.id}
+                    </span>
+                    <span className="text-[10px] text-gray-400">{rank.multiplier}x</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <p className="text-gray-500 text-xs mt-2 text-center">
+              {getQuestRankInfo(newQuest.rank).description}
+            </p>
+          </div>
+
           <div>
             <label className="text-gray-400 text-xs uppercase tracking-wider block mb-1">Quest Name</label>
             <input
@@ -1545,6 +2110,7 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
               placeholder="Enter quest name..."
             />
           </div>
+
           <div>
             <label className="text-gray-400 text-xs uppercase tracking-wider block mb-1">Time Block (optional)</label>
             <input
@@ -1555,9 +2121,10 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
               placeholder="e.g., 9:00 AM - 10:00 AM"
             />
           </div>
+
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="text-cyber-cyan text-xs uppercase tracking-wider block mb-1">XP Reward</label>
+              <label className="text-cyber-cyan text-xs uppercase tracking-wider block mb-1">Base XP</label>
               <input
                 type="number"
                 value={newQuest.reward}
@@ -1566,7 +2133,7 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
               />
             </div>
             <div>
-              <label className="text-cyber-gold text-xs uppercase tracking-wider block mb-1">Gold</label>
+              <label className="text-cyber-gold text-xs uppercase tracking-wider block mb-1">Base Gold</label>
               <input
                 type="number"
                 value={newQuest.goldReward}
@@ -1584,12 +2151,45 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
               />
             </div>
           </div>
-          <button
-            onClick={handleAddQuest}
-            className="w-full bg-cyber-cyan text-black py-3 rounded-lg font-bold btn-press hover:shadow-neon-cyan transition-all"
-          >
-            Create Quest
-          </button>
+
+          {/* Preview */}
+          <div className="bg-cyber-gray/50 rounded-lg p-3">
+            <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">Final Rewards (with multiplier)</p>
+            <div className="flex items-center justify-around text-sm">
+              <span className="text-cyber-cyan font-bold">
+                {Math.round((parseInt(newQuest.reward) || 50) * getQuestRankInfo(newQuest.rank).multiplier)} XP
+              </span>
+              <span className="text-cyber-gold font-bold">
+                {Math.round((parseInt(newQuest.goldReward) || 10) * getQuestRankInfo(newQuest.rank).multiplier)} Gold
+              </span>
+              <span className="text-cyber-red font-bold">
+                -{Math.round((parseInt(newQuest.penalty) || 25) * getQuestRankInfo(newQuest.rank).multiplier)}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                soundManager.click();
+                setShowAddModal(false);
+              }}
+              className="flex-1 py-3 rounded-lg border border-gray-600 text-gray-400 font-medium hover:bg-gray-800 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAddQuest}
+              disabled={!newQuest.name.trim()}
+              className={`flex-1 py-3 rounded-lg font-bold btn-press transition-all ${
+                newQuest.name.trim()
+                  ? 'bg-cyber-cyan text-black hover:shadow-neon-cyan'
+                  : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              Create
+            </button>
+          </div>
         </div>
       </Modal>
     </div>
@@ -1597,9 +2197,51 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
 };
 
 // ==================== AWAKENING (VISION) ====================
-const Awakening = ({ state, onUpdateVision, showNotification }) => {
+const FALLBACK_QUOTES = [
+  { q: "The gap between who you are and who you want to be is what you do.", a: "Unknown" },
+  { q: "Discipline is choosing between what you want now and what you want most.", a: "Abraham Lincoln" },
+  { q: "The only way to do great work is to love what you do.", a: "Steve Jobs" },
+  { q: "Success is not final, failure is not fatal: it is the courage to continue that counts.", a: "Winston Churchill" },
+  { q: "Your limitation—it's only your imagination.", a: "Unknown" }
+];
+
+const Awakening = ({ state, onUpdateVision, onResetSystem, showNotification }) => {
   const [editing, setEditing] = useState(null);
   const [tempVision, setTempVision] = useState(state.vision);
+  const [resetConfirm, setResetConfirm] = useState('');
+  const [showResetWarning, setShowResetWarning] = useState(false);
+  const [dailyQuote, setDailyQuote] = useState({ q: '', a: '' });
+
+  // Fetch daily quote - only once per day
+  useEffect(() => {
+    const today = getToday();
+    const cached = localStorage.getItem('dailyQuote');
+
+    if (cached) {
+      const { date, quote } = JSON.parse(cached);
+      if (date === today) {
+        setDailyQuote(quote);
+        return;
+      }
+    }
+
+    // Fetch new quote from quotable.io (CORS-friendly)
+    fetch('https://api.quotable.io/random?tags=motivational|inspirational|success')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.content) {
+          const quote = { q: data.content, a: data.author };
+          setDailyQuote(quote);
+          localStorage.setItem('dailyQuote', JSON.stringify({ date: today, quote }));
+        }
+      })
+      .catch(() => {
+        // Use fallback quote on error
+        const fallback = FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
+        setDailyQuote(fallback);
+        localStorage.setItem('dailyQuote', JSON.stringify({ date: today, quote: fallback }));
+      });
+  }, []);
 
   const handleSave = (type) => {
     onUpdateVision({ ...state.vision, [type]: tempVision[type] });
@@ -1607,8 +2249,18 @@ const Awakening = ({ state, onUpdateVision, showNotification }) => {
     showNotification('Vision Saved!', 'success');
   };
 
+  const handleReset = () => {
+    if (resetConfirm === 'I give up!') {
+      soundManager.penalty();
+      onResetSystem();
+    } else {
+      soundManager.error();
+      showNotification('Type exactly "I give up!" to reset', 'error');
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full pb-4 px-4 overflow-y-auto">
+    <div className="h-full overflow-y-auto pb-4 px-4">
       {/* Header */}
       <div className="text-center py-6">
         <h2 className="font-display text-2xl font-bold text-white flex items-center justify-center gap-2 mb-1">
@@ -1722,12 +2374,83 @@ const Awakening = ({ state, onUpdateVision, showNotification }) => {
       </div>
 
       {/* Motivational Quote */}
-      <div className="bg-gradient-to-r from-cyber-purple/20 to-cyber-cyan/20 rounded-xl p-5 border border-cyber-purple/30">
-        <p className="text-center text-gray-300 italic">
-          "The gap between who you are and who you want to be is what you do."
-        </p>
-        <p className="text-center text-gray-500 text-sm mt-2">— Your daily reminder</p>
+      <div className="bg-gradient-to-r from-cyber-purple/20 to-cyber-cyan/20 rounded-xl p-5 border border-cyber-purple/30 mb-6">
+        {dailyQuote.q ? (
+          <>
+            <p className="text-center text-gray-300 italic">
+              "{dailyQuote.q}"
+            </p>
+            <p className="text-center text-gray-500 text-sm mt-2">— {dailyQuote.a}</p>
+          </>
+        ) : (
+          <div className="flex justify-center">
+            <div className="w-5 h-5 border-2 border-cyber-cyan/30 border-t-cyber-cyan rounded-full animate-spin" />
+          </div>
+        )}
       </div>
+
+      {/* Danger Zone - Reset System */}
+      <div className="mt-auto">
+        <button
+          onClick={() => {
+            soundManager.click();
+            setShowResetWarning(true);
+          }}
+          className="w-full py-3 rounded-lg border border-gray-700 text-gray-500 text-sm hover:border-cyber-red/50 hover:text-gray-400 transition-all"
+        >
+          Reset System...
+        </button>
+      </div>
+
+      {/* Reset Confirmation Modal */}
+      {showResetWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 animate-fadeIn">
+          <div className="w-full max-w-sm bg-cyber-dark border-2 border-cyber-red/50 rounded-xl p-6 animate-modalPop">
+            <div className="flex items-center justify-center gap-2 text-cyber-red mb-4">
+              <AlertTriangle size={24} />
+              <h3 className="font-display font-bold text-xl">DANGER ZONE</h3>
+            </div>
+            <p className="text-gray-400 text-sm text-center mb-4">
+              This will permanently delete ALL your progress, habits, quests, and rewards. This cannot be undone.
+            </p>
+            <p className="text-gray-500 text-xs text-center mb-3">
+              Type <span className="text-cyber-red font-bold">"I give up!"</span> to confirm:
+            </p>
+            <input
+              type="text"
+              value={resetConfirm}
+              onChange={(e) => setResetConfirm(e.target.value)}
+              placeholder="I give up!"
+              className="w-full bg-cyber-gray text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-cyber-red mb-4 text-center"
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  soundManager.click();
+                  setShowResetWarning(false);
+                  setResetConfirm('');
+                }}
+                className="flex-1 py-3 rounded-lg border border-gray-600 text-gray-400 font-medium hover:bg-gray-800 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReset}
+                disabled={resetConfirm !== 'I give up!'}
+                className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
+                  resetConfirm === 'I give up!'
+                    ? 'bg-cyber-red text-white hover:bg-red-600'
+                    : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                <RefreshCw size={16} />
+                Reset All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1736,6 +2459,7 @@ const Awakening = ({ state, onUpdateVision, showNotification }) => {
 const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotification }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newHabit, setNewHabit] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const today = getToday();
 
   const handleAddHabit = () => {
@@ -1757,6 +2481,9 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
       case 'zap': return <Zap size={16} />;
       case 'scroll': return <Scroll size={16} />;
       case 'heart': return <Heart size={16} />;
+      case 'target': return <Target size={16} />;
+      case 'shield': return <Shield size={16} />;
+      case 'user': return <User size={16} />;
       default: return <Star size={16} />;
     }
   };
@@ -1769,12 +2496,12 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
     return state.habitStreaks[habitId] || 0;
   };
 
-  // Generate heatmap data (last 8 weeks)
+  // Generate compact heatmap data (last 5 weeks)
   const generateHeatmapData = () => {
     const weeks = [];
     const todayDate = new Date();
 
-    for (let week = 7; week >= 0; week--) {
+    for (let week = 4; week >= 0; week--) {
       const weekData = [];
       for (let day = 0; day < 7; day++) {
         const date = new Date(todayDate);
@@ -1792,26 +2519,106 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
     return weeks;
   };
 
+  // Calculate habit stats
+  const calculateStats = () => {
+    const totalHabits = state.habits.length;
+    const completedToday = state.habitLog[today]?.length || 0;
+
+    // Calculate average daily completion
+    const logDates = Object.keys(state.habitLog);
+    let totalCompleted = 0;
+    logDates.forEach(date => {
+      totalCompleted += state.habitLog[date]?.length || 0;
+    });
+    const avgPerDay = logDates.length > 0 ? (totalCompleted / logDates.length).toFixed(1) : '0';
+
+    // Best current streak
+    const streakValues = Object.values(state.habitStreaks);
+    const bestStreak = streakValues.length > 0 ? Math.max(...streakValues) : 0;
+
+    return { totalHabits, completedToday, avgPerDay, bestStreak };
+  };
+
+  const stats = calculateStats();
   const heatmapData = generateHeatmapData();
   const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
   return (
-    <div className="flex flex-col h-full pb-4 px-4 overflow-y-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between py-4">
-        <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
-          <Flame className="text-cyber-gold animate-fireFlicker" /> Habits
-        </h2>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-cyber-cyan text-black px-4 py-2 rounded-lg font-bold flex items-center gap-1 btn-press hover:shadow-neon-cyan transition-all"
-        >
-          <Plus size={16} /> Add
-        </button>
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Sticky Header + Heatmap */}
+      <div className="flex-shrink-0 px-4 bg-black">
+        {/* Header */}
+        <div className="flex items-center justify-between py-4">
+          <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
+            <Flame className="text-cyber-gold animate-fireFlicker" /> Habits
+          </h2>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-cyber-cyan text-black px-4 py-2 rounded-lg font-bold flex items-center gap-1 btn-press hover:shadow-neon-cyan transition-all"
+          >
+            <Plus size={16} /> Add
+          </button>
+        </div>
+
+        {/* Heatmap + Stats Row */}
+        <div className="flex gap-3 mb-4">
+          {/* Compact Heatmap - Left */}
+          <div className="bg-cyber-dark rounded-xl p-3 glow-border-cyan flex-shrink-0">
+            {/* Mini heatmap grid */}
+            <div className="space-y-[2px]">
+              {heatmapData.map((week, weekIndex) => (
+                <div key={weekIndex} className="flex gap-[2px]">
+                  {week.map((day, dayIndex) => (
+                    <div
+                      key={dayIndex}
+                      className={`w-[10px] h-[10px] rounded-[2px] heatmap-${day.intensity}`}
+                      title={`${day.date}: ${day.count} habits`}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+            {/* Mini legend */}
+            <div className="flex items-center gap-[2px] mt-2 justify-center">
+              {[0, 2, 4, 5].map(i => (
+                <div key={i} className={`w-[8px] h-[8px] rounded-[2px] heatmap-${i}`} />
+              ))}
+            </div>
+          </div>
+
+          {/* Stats Box - Right */}
+          <div className="flex-1 grid grid-cols-2 gap-2">
+            <div className="bg-cyber-dark rounded-lg p-2 glow-border-cyan text-center">
+              <p className="text-cyber-cyan font-display font-bold text-lg">
+                {stats.completedToday}/{stats.totalHabits}
+              </p>
+              <p className="text-gray-500 text-[10px] uppercase">Today</p>
+            </div>
+            <div className="bg-cyber-dark rounded-lg p-2 glow-border-gold text-center">
+              <p className="text-cyber-gold font-display font-bold text-lg">
+                {stats.avgPerDay}
+              </p>
+              <p className="text-gray-500 text-[10px] uppercase">Avg/Day</p>
+            </div>
+            <div className="bg-cyber-dark rounded-lg p-2 glow-border-red text-center">
+              <p className="text-orange-500 font-display font-bold text-lg flex items-center justify-center gap-1">
+                <Flame size={14} /> {stats.bestStreak}
+              </p>
+              <p className="text-gray-500 text-[10px] uppercase">Best Streak</p>
+            </div>
+            <div className="bg-cyber-dark rounded-lg p-2 border border-gray-700 text-center">
+              <p className="text-white font-display font-bold text-lg">
+                {stats.totalHabits}
+              </p>
+              <p className="text-gray-500 text-[10px] uppercase">Habits</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Daily Habits */}
-      <div className="space-y-3 mb-6">
+      {/* Scrollable Habits List */}
+      <div className="flex-1 overflow-y-auto px-4 pb-4">
+        <div className="space-y-3">
         {state.habits.map((habit, i) => {
           const completed = isHabitCompletedToday(habit.id);
           const streak = getStreak(habit.id);
@@ -1861,59 +2668,43 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
                     <Flame size={12} /> {streak}x
                   </div>
                 )}
-                <button
-                  onClick={() => onDeleteHabit(habit.id)}
-                  className="text-gray-600 hover:text-cyber-red p-1 transition-colors"
-                >
-                  <Trash2 size={16} />
-                </button>
+                {deleteConfirm === habit.id ? (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        soundManager.click();
+                        onDeleteHabit(habit.id);
+                        setDeleteConfirm(null);
+                      }}
+                      className="text-xs bg-cyber-red text-white px-2 py-1 rounded font-bold"
+                    >
+                      Yes
+                    </button>
+                    <button
+                      onClick={() => {
+                        soundManager.click();
+                        setDeleteConfirm(null);
+                      }}
+                      className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded"
+                    >
+                      No
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      soundManager.click();
+                      setDeleteConfirm(habit.id);
+                    }}
+                    className="text-gray-600 hover:text-cyber-red p-1 transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
               </div>
             </div>
           );
         })}
-      </div>
-
-      {/* Heatmap */}
-      <div className="bg-cyber-dark rounded-xl p-4 glow-border-cyan">
-        <h3 className="font-display font-bold text-cyber-cyan mb-4 flex items-center gap-2">
-          <Calendar size={18} /> Activity Heatmap
-        </h3>
-
-        {/* Day labels */}
-        <div className="flex mb-2">
-          <div className="w-6"></div>
-          {dayLabels.map((day, i) => (
-            <div key={i} className="flex-1 text-center text-gray-500 text-xs">
-              {day}
-            </div>
-          ))}
-        </div>
-
-        {/* Heatmap grid */}
-        <div className="space-y-1">
-          {heatmapData.map((week, weekIndex) => (
-            <div key={weekIndex} className="flex gap-1">
-              <div className="w-6 text-gray-600 text-xs flex items-center">
-                {weekIndex === 0 ? 'W8' : weekIndex === 7 ? 'W1' : ''}
-              </div>
-              {week.map((day, dayIndex) => (
-                <div
-                  key={dayIndex}
-                  className={`flex-1 aspect-square rounded-sm heatmap-${day.intensity} transition-all hover:scale-110`}
-                  title={`${day.date}: ${day.count} habits`}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-
-        {/* Legend */}
-        <div className="flex items-center justify-end gap-2 mt-4">
-          <span className="text-gray-500 text-xs">Less</span>
-          {[0, 1, 2, 3, 4, 5].map(i => (
-            <div key={i} className={`w-3 h-3 rounded-sm heatmap-${i}`} />
-          ))}
-          <span className="text-gray-500 text-xs">More</span>
         </div>
       </div>
 
@@ -1930,12 +2721,28 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
               placeholder="e.g., Drink 8 glasses of water"
             />
           </div>
-          <button
-            onClick={handleAddHabit}
-            className="w-full bg-cyber-cyan text-black py-3 rounded-lg font-bold btn-press hover:shadow-neon-cyan transition-all"
-          >
-            Add Habit
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                soundManager.click();
+                setShowAddModal(false);
+              }}
+              className="flex-1 py-3 rounded-lg border border-gray-600 text-gray-400 font-medium hover:bg-gray-800 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAddHabit}
+              disabled={!newHabit.trim()}
+              className={`flex-1 py-3 rounded-lg font-bold btn-press transition-all ${
+                newHabit.trim()
+                  ? 'bg-cyber-cyan text-black hover:shadow-neon-cyan'
+                  : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              Add
+            </button>
+          </div>
         </div>
       </Modal>
     </div>
@@ -1943,11 +2750,37 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
 };
 
 // ==================== REWARDS SHOP ====================
+const REWARD_TIERS = [
+  { id: 'micro', name: 'Quick Relief', color: '#00ff88', icon: 'zap' },
+  { id: 'medium', name: 'Mental Reset', color: '#00ffff', icon: 'target' },
+  { id: 'premium', name: 'High Dopamine', color: '#9d4edd', icon: 'star' },
+  { id: 'legendary', name: 'Legendary', color: '#ffd700', icon: 'crown' }
+];
+
 const Shop = ({ state, onBuyReward, onAddReward, onDeleteReward, showNotification }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPurchaseAnimation, setShowPurchaseAnimation] = useState(false);
   const [purchasedReward, setPurchasedReward] = useState(null);
   const [newReward, setNewReward] = useState({ name: '', cost: 100 });
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [showIntro, setShowIntro] = useState(() => {
+    return !localStorage.getItem('shopIntroSeen');
+  });
+
+  const handleDismissIntro = () => {
+    soundManager.click();
+    setShowIntro(false);
+    localStorage.setItem('shopIntroSeen', 'true');
+  };
+
+  // Group rewards by tier
+  const groupedRewards = REWARD_TIERS.map(tier => ({
+    ...tier,
+    rewards: state.rewards.filter(r => r.tier === tier.id)
+  }));
+
+  // Get ungrouped rewards (custom or those without tier)
+  const ungroupedRewards = state.rewards.filter(r => !r.tier);
 
   const handleBuy = (reward) => {
     if (state.player.gold < reward.cost) {
@@ -1976,8 +2809,80 @@ const Shop = ({ state, onBuyReward, onAddReward, onDeleteReward, showNotificatio
     showNotification('Reward Added!', 'success');
   };
 
+  const getTierIcon = (iconName) => {
+    switch (iconName) {
+      case 'zap': return <Zap size={16} />;
+      case 'target': return <Target size={16} />;
+      case 'star': return <Star size={16} />;
+      case 'crown': return <Crown size={16} />;
+      default: return <Gift size={16} />;
+    }
+  };
+
+  const renderRewardCard = (reward, i) => (
+    <div
+      key={reward.id}
+      className="bg-cyber-dark rounded-xl p-3 card-hover relative animate-fadeIn"
+      style={{
+        animationDelay: `${i * 0.05}s`,
+        borderLeft: reward.tier ? `3px solid ${REWARD_TIERS.find(t => t.id === reward.tier)?.color || '#ffd700'}` : '3px solid #ffd700'
+      }}
+    >
+      {deleteConfirm === reward.id ? (
+        <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
+          <button
+            onClick={() => {
+              soundManager.click();
+              onDeleteReward(reward.id);
+              setDeleteConfirm(null);
+            }}
+            className="text-xs bg-cyber-red text-white px-2 py-1 rounded font-bold"
+          >
+            Yes
+          </button>
+          <button
+            onClick={() => {
+              soundManager.click();
+              setDeleteConfirm(null);
+            }}
+            className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded"
+          >
+            No
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => {
+            soundManager.click();
+            setDeleteConfirm(reward.id);
+          }}
+          className="absolute top-2 right-2 text-gray-600 hover:text-cyber-red p-1 transition-colors"
+        >
+          <Trash2 size={12} />
+        </button>
+      )}
+      <h4 className="font-bold text-white text-sm mb-2 pr-6">{reward.name}</h4>
+      <div className="flex items-center justify-between">
+        <div className="text-cyber-gold font-display font-bold text-sm flex items-center gap-1">
+          <Coins size={12} /> {reward.cost}
+        </div>
+        <button
+          onClick={() => handleBuy(reward)}
+          disabled={state.player.gold < reward.cost}
+          className={`px-3 py-1 rounded-lg font-bold text-xs btn-press transition-all ${
+            state.player.gold >= reward.cost
+              ? 'bg-cyber-gold text-black hover:shadow-neon-gold'
+              : 'bg-cyber-gray text-gray-500 cursor-not-allowed'
+          }`}
+        >
+          {state.player.gold >= reward.cost ? 'Buy' : 'Need'}
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="flex flex-col h-full pb-4 px-4 overflow-y-auto">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Purchase Animation Overlay */}
       {showPurchaseAnimation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 animate-fadeIn">
@@ -1998,65 +2903,124 @@ const Shop = ({ state, onBuyReward, onAddReward, onDeleteReward, showNotificatio
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between py-4">
-        <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
-          <ShoppingBag className="text-cyber-gold" /> Shop
-        </h2>
-        <div className="flex items-center gap-3">
-          <div className="bg-cyber-gold/20 text-cyber-gold px-3 py-1 rounded-lg font-bold flex items-center gap-1">
-            <Coins size={16} className="animate-coinBounce" /> {state.player.gold}
+      {/* Sticky Header */}
+      <div className="flex-shrink-0 px-4 bg-black">
+        <div className="flex items-center justify-between py-4">
+          <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
+            <ShoppingBag className="text-cyber-gold" /> Shop
+          </h2>
+          <div className="flex items-center gap-3">
+            <div className="bg-cyber-gold/20 text-cyber-gold px-3 py-1 rounded-lg font-bold flex items-center gap-1">
+              <Coins size={16} className="animate-coinBounce" /> {state.player.gold}
+            </div>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-cyber-cyan text-black px-3 py-2 rounded-lg font-bold flex items-center gap-1 btn-press hover:shadow-neon-cyan transition-all"
+            >
+              <Plus size={16} />
+            </button>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-cyber-cyan text-black px-3 py-2 rounded-lg font-bold flex items-center gap-1 btn-press hover:shadow-neon-cyan transition-all"
-          >
-            <Plus size={16} />
-          </button>
         </div>
       </div>
 
-      {/* Info Banner */}
-      <div className="bg-gradient-to-r from-cyber-gold/20 to-cyber-purple/20 rounded-xl p-4 mb-4 border border-cyber-gold/30">
-        <p className="text-gray-300 text-sm text-center">
-          Complete quests and habits to earn Gold. Spend it on rewards you deserve!
-        </p>
-      </div>
+      {/* First-time Intro Modal */}
+      {showIntro && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 animate-fadeIn">
+          <div className="w-full max-w-sm bg-cyber-dark border border-cyber-gold/30 rounded-xl p-6 animate-modalPop">
+            <div className="flex items-center justify-center gap-2 text-cyber-gold mb-4">
+              <ShoppingBag size={28} />
+              <h3 className="font-display font-bold text-xl">REWARD SHOP</h3>
+            </div>
 
-      {/* Rewards Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        {state.rewards.map((reward, i) => (
-          <div
-            key={reward.id}
-            className="bg-cyber-dark rounded-xl p-4 glow-border-gold card-hover relative animate-fadeIn"
-            style={{ animationDelay: `${i * 0.1}s` }}
-          >
-            <button
-              onClick={() => onDeleteReward(reward.id)}
-              className="absolute top-2 right-2 text-gray-600 hover:text-cyber-red p-1 transition-colors"
-            >
-              <Trash2 size={14} />
-            </button>
-            <div className="w-14 h-14 mx-auto mb-3 bg-cyber-gold/20 rounded-full flex items-center justify-center">
-              <Gift className="text-cyber-gold" size={28} />
+            <p className="text-gray-300 text-sm text-center mb-5">
+              Complete quests and habits to earn Gold. Spend it on rewards you deserve!
+            </p>
+
+            <div className="space-y-3 mb-5">
+              <div className="flex items-start gap-3 bg-cyber-gray/30 rounded-lg p-3">
+                <div className="w-8 h-8 rounded-lg bg-cyber-cyan/20 flex items-center justify-center flex-shrink-0">
+                  <Swords size={16} className="text-cyber-cyan" />
+                </div>
+                <div>
+                  <p className="text-white text-sm font-bold">Earn from Quests</p>
+                  <p className="text-gray-500 text-xs">Complete quests to earn Gold rewards.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 bg-cyber-gray/30 rounded-lg p-3">
+                <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                  <Flame size={16} className="text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-white text-sm font-bold">Earn from Habits</p>
+                  <p className="text-gray-500 text-xs">Daily habits give you +5 Gold each.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 bg-cyber-gray/30 rounded-lg p-3">
+                <div className="w-8 h-8 rounded-lg bg-cyber-gold/20 flex items-center justify-center flex-shrink-0">
+                  <Gift size={16} className="text-cyber-gold" />
+                </div>
+                <div>
+                  <p className="text-white text-sm font-bold">Spend Wisely</p>
+                  <p className="text-gray-500 text-xs">Buy rewards you've earned. You deserve it!</p>
+                </div>
+              </div>
             </div>
-            <h4 className="font-bold text-white text-center text-sm mb-2">{reward.name}</h4>
-            <div className="text-cyber-gold text-center font-display font-bold mb-3 flex items-center justify-center gap-1">
-              <Coins size={14} /> {reward.cost}
-            </div>
+
             <button
-              onClick={() => handleBuy(reward)}
-              disabled={state.player.gold < reward.cost}
-              className={`w-full py-2 rounded-lg font-bold text-sm btn-press transition-all ${
-                state.player.gold >= reward.cost
-                  ? 'bg-cyber-gold text-black hover:shadow-neon-gold'
-                  : 'bg-cyber-gray text-gray-500 cursor-not-allowed'
-              }`}
+              onClick={handleDismissIntro}
+              className="w-full py-3 rounded-lg bg-cyber-gold text-black font-bold btn-press hover:shadow-neon-gold transition-all"
             >
-              {state.player.gold >= reward.cost ? 'Buy' : 'Need Gold'}
+              Let's Shop!
             </button>
           </div>
-        ))}
+        </div>
+      )}
+
+      {/* Scrollable Rewards List */}
+      <div className="flex-1 overflow-y-auto px-4 pb-4">
+        {/* Tiered Rewards */}
+        {groupedRewards.map(tier => {
+          if (tier.rewards.length === 0) return null;
+          return (
+            <div key={tier.id} className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div
+                  className="w-6 h-6 rounded flex items-center justify-center"
+                  style={{ backgroundColor: `${tier.color}20`, color: tier.color }}
+                >
+                  {getTierIcon(tier.icon)}
+                </div>
+                <h3 className="font-display font-bold text-sm" style={{ color: tier.color }}>
+                  {tier.name}
+                </h3>
+                <span className="text-gray-600 text-xs">({tier.rewards.length})</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {tier.rewards.map((reward, i) => renderRewardCard(reward, i))}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Custom/Ungrouped Rewards */}
+        {ungroupedRewards.length > 0 && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded flex items-center justify-center bg-cyber-cyan/20 text-cyber-cyan">
+                <Sparkles size={16} />
+              </div>
+              <h3 className="font-display font-bold text-sm text-cyber-cyan">
+                Custom Rewards
+              </h3>
+              <span className="text-gray-600 text-xs">({ungroupedRewards.length})</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {ungroupedRewards.map((reward, i) => renderRewardCard(reward, i))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Add Reward Modal */}
@@ -2081,12 +3045,28 @@ const Shop = ({ state, onBuyReward, onAddReward, onDeleteReward, showNotificatio
               className="w-full bg-cyber-gray text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-cyber-cyan transition-all"
             />
           </div>
-          <button
-            onClick={handleAddReward}
-            className="w-full bg-cyber-gold text-black py-3 rounded-lg font-bold btn-press hover:shadow-neon-gold transition-all"
-          >
-            Add Reward
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                soundManager.click();
+                setShowAddModal(false);
+              }}
+              className="flex-1 py-3 rounded-lg border border-gray-600 text-gray-400 font-medium hover:bg-gray-800 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAddReward}
+              disabled={!newReward.name.trim()}
+              className={`flex-1 py-3 rounded-lg font-bold btn-press transition-all ${
+                newReward.name.trim()
+                  ? 'bg-cyber-gold text-black hover:shadow-neon-gold'
+                  : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              Add
+            </button>
+          </div>
         </div>
       </Modal>
     </div>
@@ -2104,6 +3084,12 @@ const App = () => {
     const saved = localStorage.getItem('theSystemSound');
     return saved !== 'false';
   });
+
+  // PWA Install Prompt States
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [isPwaInstalled, setIsPwaInstalled] = useState(false);
+
   const previousLevel = useRef(calculateLevel(state.player.totalXp));
   const previousRank = useRef(getRank(calculateLevel(state.player.totalXp)));
 
@@ -2116,6 +3102,149 @@ const App = () => {
   const toggleSound = () => {
     setSoundEnabled(prev => !prev);
     soundManager.click();
+  };
+
+  // Check if on iOS
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  // Swipe navigation
+  const touchStart = useRef({ x: 0, y: 0 });
+  const touchEnd = useRef({ x: 0, y: 0 });
+  const minSwipeDistance = 50;
+  const [swipeIndicator, setSwipeIndicator] = useState(null); // 'left' | 'right' | null
+
+  const tabOrder = ['home', 'habits', 'quests', 'shop', 'awakening'];
+
+  const handleTouchStart = (e) => {
+    touchStart.current = {
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY
+    };
+    touchEnd.current = { x: 0, y: 0 };
+    setSwipeIndicator(null);
+  };
+
+  const handleTouchMove = (e) => {
+    touchEnd.current = {
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY
+    };
+
+    const deltaX = touchStart.current.x - touchEnd.current.x;
+    const deltaY = touchStart.current.y - touchEnd.current.y;
+
+    // Only show indicator for clearly horizontal swipes (2:1 ratio)
+    if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 2) {
+      const currentIndex = tabOrder.indexOf(activeTab);
+      if (deltaX > 0 && currentIndex < tabOrder.length - 1) {
+        setSwipeIndicator('left');
+      } else if (deltaX < 0 && currentIndex > 0) {
+        setSwipeIndicator('right');
+      } else {
+        setSwipeIndicator(null);
+      }
+    } else {
+      setSwipeIndicator(null);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setSwipeIndicator(null);
+
+    // No movement recorded
+    if (touchEnd.current.x === 0 && touchEnd.current.y === 0) {
+      return;
+    }
+
+    const deltaX = touchStart.current.x - touchEnd.current.x;
+    const deltaY = touchStart.current.y - touchEnd.current.y;
+
+    // Only register clearly horizontal swipes (2:1 ratio horizontal to vertical)
+    if (Math.abs(deltaX) < minSwipeDistance || Math.abs(deltaX) < Math.abs(deltaY) * 2) {
+      return;
+    }
+
+    const currentIndex = tabOrder.indexOf(activeTab);
+
+    if (deltaX > 0) {
+      // Swiped left -> go to next tab
+      if (currentIndex < tabOrder.length - 1) {
+        soundManager.tabSwitch();
+        setActiveTab(tabOrder[currentIndex + 1]);
+      }
+    } else {
+      // Swiped right -> go to previous tab
+      if (currentIndex > 0) {
+        soundManager.tabSwitch();
+        setActiveTab(tabOrder[currentIndex - 1]);
+      }
+    }
+  };
+
+  // PWA Install Prompt Effect
+  useEffect(() => {
+    // Check if already installed
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                         window.navigator.standalone ||
+                         document.referrer.includes('android-app://');
+
+    if (isStandalone) {
+      setIsPwaInstalled(true);
+      return;
+    }
+
+    // Listen for the beforeinstallprompt event (Android/Desktop Chrome)
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+
+      // Show install banner after onboarding (every time until installed)
+      if (state.onboarded) {
+        setTimeout(() => setShowInstallBanner(true), 2000);
+      }
+    };
+
+    // Listen for successful installation
+    const handleAppInstalled = () => {
+      setIsPwaInstalled(true);
+      setShowInstallBanner(false);
+      setDeferredPrompt(null);
+      showNotification('App installed! You now have the full experience.', 'success');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    // For iOS, show install banner after onboarding (every time until installed)
+    if (isIOS && state.onboarded) {
+      setTimeout(() => setShowInstallBanner(true), 2000);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, [state.onboarded, isIOS]);
+
+  // Handle PWA Install
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+
+    soundManager.click();
+    deferredPrompt.prompt();
+
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      soundManager.success();
+    }
+    setDeferredPrompt(null);
+    setShowInstallBanner(false);
+  };
+
+  // Handle dismiss install banner (only for current session)
+  const handleDismissInstall = () => {
+    soundManager.click();
+    setShowInstallBanner(false);
   };
 
   // Save to localStorage whenever state changes
@@ -2194,15 +3323,27 @@ const App = () => {
   }, []);
 
   const handleOnboardingComplete = (playerData) => {
+    // Use track rewards if available, otherwise keep defaults
+    const trackRewards = playerData.rewards && playerData.rewards.length > 0
+      ? playerData.rewards
+      : [
+          { id: '1', name: '1 Episode Netflix', cost: 200, icon: 'gift' },
+          { id: '2', name: 'Snack Break', cost: 100, icon: 'gift' },
+          { id: '3', name: '30min Gaming', cost: 300, icon: 'gift' }
+        ];
+
     setState(prev => ({
       ...prev,
       onboarded: true,
       player: {
         ...prev.player,
         name: playerData.name,
-        class: playerData.class,
+        track: playerData.track,
         lastLoginDate: getToday()
-      }
+      },
+      habits: playerData.habits || [],
+      quests: playerData.quests || [],
+      rewards: trackRewards
     }));
   };
 
@@ -2278,6 +3419,17 @@ const App = () => {
     setState(prev => ({
       ...prev,
       quests: prev.quests.filter(q => q.id !== questId)
+    }));
+  };
+
+  const handleReorderQuest = (questId1, newRank1, questId2, newRank2) => {
+    setState(prev => ({
+      ...prev,
+      quests: prev.quests.map(q => {
+        if (q.id === questId1) return { ...q, rank: newRank1 };
+        if (q.id === questId2) return { ...q, rank: newRank2 };
+        return q;
+      })
     }));
   };
 
@@ -2382,16 +3534,27 @@ const App = () => {
     }));
   };
 
+  const handleResetSystem = () => {
+    // Clear all localStorage data
+    localStorage.removeItem('theSystem');
+    localStorage.removeItem('theSystemSound');
+
+    // Reset state to initial
+    setState(getInitialState());
+    setActiveTab('home');
+    showNotification('System has been reset. Start fresh.', 'error');
+  };
+
   const handleCloseCelebration = useCallback(() => {
     setCelebration(null);
   }, []);
 
   const tabs = [
     { id: 'home', icon: Home, label: 'Home' },
-    { id: 'quests', icon: Swords, label: 'Quests' },
-    { id: 'awakening', icon: Eye, label: 'Vision' },
     { id: 'habits', icon: Flame, label: 'Habits' },
-    { id: 'shop', icon: ShoppingBag, label: 'Shop' }
+    { id: 'quests', icon: Swords, label: 'Quests' },
+    { id: 'shop', icon: ShoppingBag, label: 'Shop' },
+    { id: 'awakening', icon: Eye, label: 'Vision' }
   ];
 
   // Show onboarding if not completed
@@ -2400,7 +3563,7 @@ const App = () => {
   }
 
   return (
-    <div className="h-screen w-screen bg-black flex flex-col max-w-[430px] mx-auto relative overflow-hidden">
+    <div className="w-full min-w-0 bg-black flex flex-col max-w-[500px] mx-auto relative" style={{ height: '100dvh' }}>
       {/* Celebrations */}
       {celebration?.type === 'levelUp' && (
         <LevelUpCelebration
@@ -2449,8 +3612,99 @@ const App = () => {
         />
       )}
 
+      {/* PWA Install Banner */}
+      {showInstallBanner && !isPwaInstalled && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 animate-fadeIn">
+          <div className="w-full max-w-sm bg-cyber-dark border-2 border-cyber-cyan rounded-xl p-6 animate-modalPop">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-cyber-cyan/20 rounded-full flex items-center justify-center border border-cyber-cyan/50">
+                <Smartphone className="w-8 h-8 text-cyber-cyan" />
+              </div>
+            </div>
+            <h3 className="text-xl font-display font-bold text-cyber-cyan text-center mb-2">
+              INSTALL THE APP
+            </h3>
+            <p className="text-gray-400 text-sm text-center mb-4">
+              Install this app on your device for the best experience. Get offline access, faster loading, and immersive fullscreen mode.
+            </p>
+            <div className="flex items-center justify-center gap-2 text-yellow-400 text-xs mb-4 bg-yellow-400/10 rounded-lg p-2">
+              <AlertTriangle size={14} />
+              <span>Without installing, you may miss out on key features</span>
+            </div>
+
+            {/* Android Instructions */}
+            <div className="mb-3">
+              <p className="text-cyber-cyan text-xs font-bold mb-2">To install on Android:</p>
+              <ol className="text-gray-400 text-xs space-y-1">
+                <li className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full bg-cyber-cyan/20 text-cyber-cyan flex items-center justify-center text-[10px] font-bold">1</span>
+                  <span>Tap <strong className="text-white">⋮</strong> (menu) in Chrome</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full bg-cyber-cyan/20 text-cyber-cyan flex items-center justify-center text-[10px] font-bold">2</span>
+                  <span>Tap <strong className="text-white">"Add to Home screen"</strong></span>
+                </li>
+              </ol>
+            </div>
+
+            {/* iOS Instructions */}
+            <div className="mb-4">
+              <p className="text-cyber-cyan text-xs font-bold mb-2">To install on iOS:</p>
+              <ol className="text-gray-400 text-xs space-y-1">
+                <li className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full bg-cyber-cyan/20 text-cyber-cyan flex items-center justify-center text-[10px] font-bold">1</span>
+                  <span>Tap <strong className="text-white">Share</strong> button in Safari</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full bg-cyber-cyan/20 text-cyber-cyan flex items-center justify-center text-[10px] font-bold">2</span>
+                  <span>Tap <strong className="text-white">"Add to Home Screen"</strong></span>
+                </li>
+              </ol>
+            </div>
+
+            <button
+              onClick={handleDismissInstall}
+              className="w-full py-3 rounded-lg bg-cyber-cyan text-black font-bold transition-all hover:bg-cyan-400 btn-press"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Swipe Indicator */}
+      {swipeIndicator && (
+        <div className="fixed inset-0 pointer-events-none z-30 flex items-center justify-center">
+          <div className={`flex items-center gap-2 px-6 py-3 rounded-full bg-black/70 border border-cyber-cyan/50 animate-fadeIn ${
+            swipeIndicator === 'left' ? 'translate-x-4' : '-translate-x-4'
+          } transition-transform`}>
+            {swipeIndicator === 'right' && (
+              <>
+                <ChevronLeft className="w-6 h-6 text-cyber-cyan animate-pulse" />
+                <ChevronLeft className="w-6 h-6 text-cyber-cyan/50 -ml-4 animate-pulse" style={{ animationDelay: '0.1s' }} />
+              </>
+            )}
+            <span className="text-cyber-cyan font-display text-sm">
+              {swipeIndicator === 'left' ? tabOrder[tabOrder.indexOf(activeTab) + 1]?.toUpperCase() : tabOrder[tabOrder.indexOf(activeTab) - 1]?.toUpperCase()}
+            </span>
+            {swipeIndicator === 'left' && (
+              <>
+                <ChevronRight className="w-6 h-6 text-cyber-cyan/50 -mr-4 animate-pulse" />
+                <ChevronRight className="w-6 h-6 text-cyber-cyan animate-pulse" style={{ animationDelay: '0.1s' }} />
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
+      <div
+        className="flex-1 min-h-0 overflow-hidden relative"
+        style={{ touchAction: 'pan-y' }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         {activeTab === 'home' && (
           <Dashboard
             state={state}
@@ -2468,6 +3722,7 @@ const App = () => {
             onSkipQuest={handleSkipQuest}
             onFailQuest={handleFailQuest}
             onDeleteQuest={handleDeleteQuest}
+            onReorderQuest={handleReorderQuest}
             showNotification={showNotification}
           />
         )}
@@ -2475,6 +3730,7 @@ const App = () => {
           <Awakening
             state={state}
             onUpdateVision={handleUpdateVision}
+            onResetSystem={handleResetSystem}
             showNotification={showNotification}
           />
         )}
