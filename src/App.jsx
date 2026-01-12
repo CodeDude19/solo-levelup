@@ -63,6 +63,9 @@ class SoundManager {
 
   setEnabled(enabled) {
     this.enabled = enabled;
+  }
+
+  setHapticsEnabled(enabled) {
     this.hapticsEnabled = enabled;
   }
 
@@ -971,6 +974,7 @@ const Onboarding = ({ onComplete }) => {
     'track',
     'explain',
     'vision',
+    'credits',
     'awakening'
   ];
 
@@ -1026,7 +1030,7 @@ const Onboarding = ({ onComplete }) => {
         ))}
       </div>
 
-      <div className="flex-1 flex flex-col justify-center px-6 overflow-y-auto">
+      <div className="flex-1 flex flex-col px-6 overflow-y-auto py-4">
         {/* Step: Intro */}
         {step === 0 && (
           <div className="text-center animate-fadeIn">
@@ -1078,16 +1082,16 @@ const Onboarding = ({ onComplete }) => {
 
         {/* Step: Track Selection */}
         {step === 2 && (
-          <div className="animate-fadeIn">
-            <div className="text-center mb-6">
-              <Target className="mx-auto text-cyber-cyan mb-4" size={48} />
-              <h2 className="font-display text-2xl font-bold text-white mb-2">
+          <div className="animate-fadeIn flex-1">
+            <div className="text-center mb-4 pt-2">
+              <Target className="mx-auto text-cyber-cyan mb-2" size={36} />
+              <h2 className="font-display text-xl font-bold text-white mb-1">
                 CHOOSE YOUR TRACK
               </h2>
-              <p className="text-gray-500">Select your discipline path</p>
+              <p className="text-gray-500 text-sm">Select your discipline path</p>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {TRACKS.map((track, i) => (
                 <button
                   key={track.id}
@@ -1095,7 +1099,7 @@ const Onboarding = ({ onComplete }) => {
                     soundManager.click();
                     setSelectedTrack(track.id);
                   }}
-                  className={`w-full p-4 rounded-xl border-2 transition-all btn-press text-left animate-slideRight ${
+                  className={`w-full p-3 rounded-xl border-2 transition-all btn-press text-left animate-slideRight ${
                     selectedTrack === track.id
                       ? 'border-opacity-100'
                       : 'border-opacity-30 hover:border-opacity-50'
@@ -1103,39 +1107,39 @@ const Onboarding = ({ onComplete }) => {
                   style={{
                     borderColor: track.color,
                     backgroundColor: selectedTrack === track.id ? `${track.color}20` : 'transparent',
-                    animationDelay: `${i * 0.1}s`
+                    animationDelay: `${i * 0.05}s`
                   }}
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
                     <div
-                      className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
+                      className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: `${track.color}20` }}
                     >
-                      {track.icon === 'sparkles' && <Sparkles size={28} style={{ color: track.color }} />}
-                      {track.icon === 'zap' && <Zap size={28} style={{ color: track.color }} />}
-                      {track.icon === 'heart' && <Heart size={28} style={{ color: track.color }} />}
-                      {track.icon === 'crown' && <Crown size={28} style={{ color: track.color }} />}
+                      {track.icon === 'sparkles' && <Sparkles size={22} style={{ color: track.color }} />}
+                      {track.icon === 'zap' && <Zap size={22} style={{ color: track.color }} />}
+                      {track.icon === 'heart' && <Heart size={22} style={{ color: track.color }} />}
+                      {track.icon === 'crown' && <Crown size={22} style={{ color: track.color }} />}
                     </div>
-                    <div className="flex-1">
-                      <p className="font-display font-bold text-white text-lg">{track.name}</p>
-                      <p className="text-gray-400 text-sm">{track.desc}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-display font-bold text-white text-base">{track.name}</p>
+                      <p className="text-gray-400 text-xs">{track.desc}</p>
                       {track.habits.length > 0 && (
-                        <p className="text-xs mt-1" style={{ color: track.color }}>
-                          {track.habits.length} habits • {track.quests.length} quests pre-loaded
+                        <p className="text-[10px] mt-0.5" style={{ color: track.color }}>
+                          {track.habits.length} habits • {track.quests.length} quests
                         </p>
                       )}
                       {track.id === 'custom' && (
-                        <p className="text-xs mt-1 text-gray-500">
-                          Clean slate — add your own habits & quests
+                        <p className="text-[10px] mt-0.5 text-gray-500">
+                          Build your own path
                         </p>
                       )}
                     </div>
                     {selectedTrack === track.id && (
                       <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center animate-checkPop"
+                        className="w-7 h-7 rounded-full flex items-center justify-center animate-checkPop flex-shrink-0"
                         style={{ backgroundColor: track.color }}
                       >
-                        <Check size={18} className="text-black" />
+                        <Check size={16} className="text-black" />
                       </div>
                     )}
                   </div>
@@ -1147,60 +1151,60 @@ const Onboarding = ({ onComplete }) => {
 
         {/* Step: Explanation */}
         {step === 3 && (
-          <div className="animate-fadeIn">
-            <div className="text-center mb-6">
-              <Scroll className="mx-auto text-cyber-cyan mb-4" size={48} />
-              <h2 className="font-display text-2xl font-bold text-white mb-2">
+          <div className="animate-fadeIn flex flex-col justify-center flex-1">
+            <div className="text-center mb-4">
+              <Scroll className="mx-auto text-cyber-cyan mb-2" size={36} />
+              <h2 className="font-display text-xl font-bold text-white mb-1">
                 THE RULES
               </h2>
-              <p className="text-gray-500">Understand the system</p>
+              <p className="text-gray-500 text-sm">Understand the system</p>
             </div>
 
-            <div className="space-y-4">
-              <div className="bg-cyber-dark rounded-xl p-4 border border-cyber-cyan/20 animate-slideRight" style={{ animationDelay: '0.1s' }}>
+            <div className="space-y-2">
+              <div className="bg-cyber-dark rounded-lg p-3 border border-cyber-cyan/20 animate-slideRight" style={{ animationDelay: '0.1s' }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-cyber-cyan/20 flex items-center justify-center">
-                    <Swords className="text-cyber-cyan" size={20} />
+                  <div className="w-9 h-9 rounded-lg bg-cyber-cyan/20 flex items-center justify-center flex-shrink-0">
+                    <Swords className="text-cyber-cyan" size={18} />
                   </div>
                   <div>
-                    <p className="font-bold text-white">Quests</p>
-                    <p className="text-gray-500 text-sm">Complete tasks. Gain XP & Gold.</p>
+                    <p className="font-bold text-white text-sm">Quests</p>
+                    <p className="text-gray-500 text-xs">Complete tasks. Gain XP & Gold.</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-cyber-dark rounded-xl p-4 border border-cyber-gold/20 animate-slideRight" style={{ animationDelay: '0.2s' }}>
+              <div className="bg-cyber-dark rounded-lg p-3 border border-cyber-gold/20 animate-slideRight" style={{ animationDelay: '0.15s' }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-cyber-gold/20 flex items-center justify-center">
-                    <Flame className="text-cyber-gold" size={20} />
+                  <div className="w-9 h-9 rounded-lg bg-cyber-gold/20 flex items-center justify-center flex-shrink-0">
+                    <Flame className="text-cyber-gold" size={18} />
                   </div>
                   <div>
-                    <p className="font-bold text-white">Habits</p>
-                    <p className="text-gray-500 text-sm">Build streaks. Multiply rewards.</p>
+                    <p className="font-bold text-white text-sm">Habits</p>
+                    <p className="text-gray-500 text-xs">Build streaks. Multiply rewards.</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-cyber-dark rounded-xl p-4 border border-cyber-red/20 animate-slideRight" style={{ animationDelay: '0.3s' }}>
+              <div className="bg-cyber-dark rounded-lg p-3 border border-cyber-red/20 animate-slideRight" style={{ animationDelay: '0.2s' }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-cyber-red/20 flex items-center justify-center">
-                    <Skull className="text-cyber-red" size={20} />
+                  <div className="w-9 h-9 rounded-lg bg-cyber-red/20 flex items-center justify-center flex-shrink-0">
+                    <Skull className="text-cyber-red" size={18} />
                   </div>
                   <div>
-                    <p className="font-bold text-white">Penalties</p>
-                    <p className="text-gray-500 text-sm">Fail or skip? Face consequences.</p>
+                    <p className="font-bold text-white text-sm">Penalties</p>
+                    <p className="text-gray-500 text-xs">Fail or skip? Face consequences.</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-cyber-dark rounded-xl p-4 border border-cyber-purple/20 animate-slideRight" style={{ animationDelay: '0.4s' }}>
+              <div className="bg-cyber-dark rounded-lg p-3 border border-cyber-purple/20 animate-slideRight" style={{ animationDelay: '0.25s' }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-cyber-purple/20 flex items-center justify-center">
-                    <Crown className="text-cyber-purple" size={20} />
+                  <div className="w-9 h-9 rounded-lg bg-cyber-purple/20 flex items-center justify-center flex-shrink-0">
+                    <Crown className="text-cyber-purple" size={18} />
                   </div>
                   <div>
-                    <p className="font-bold text-white">Rank Up</p>
-                    <p className="text-gray-500 text-sm">Level up. Achieve new ranks.</p>
+                    <p className="font-bold text-white text-sm">Rank Up</p>
+                    <p className="text-gray-500 text-xs">Level up. Achieve new ranks.</p>
                   </div>
                 </div>
               </div>
@@ -1210,69 +1214,117 @@ const Onboarding = ({ onComplete }) => {
 
         {/* Step: Vision Input */}
         {step === 4 && (
-          <div className="animate-fadeIn">
-            <div className="text-center mb-6">
-              <Crown className="mx-auto text-cyber-cyan mb-4" size={48} />
-              <h2 className="font-display text-2xl font-bold text-white mb-2">
-                THE FUEL
-              </h2>
-              <p className="text-gray-500">What drives you? Who do you want to become?</p>
-            </div>
-
-            <div className="bg-cyber-dark rounded-xl p-4 border border-cyber-cyan/30 mb-4">
-              <textarea
-                value={fuel}
-                onChange={(e) => setFuel(e.target.value)}
-                placeholder="Example: I want to become a disciplined person who achieves their goals, builds wealth, and inspires others..."
-                className="w-full bg-transparent text-white text-sm rounded-lg px-3 py-2 outline-none resize-none h-28 placeholder:text-gray-600"
-                maxLength={300}
-              />
-              <div className="flex justify-end">
-                <span className="text-gray-600 text-xs">{fuel.length}/300</span>
+          <div className="animate-fadeIn flex flex-col justify-center flex-1">
+            {/* The Fuel */}
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-full bg-cyber-cyan/20 flex items-center justify-center flex-shrink-0">
+                <Crown className="text-cyber-cyan" size={20} />
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-bold text-white">THE FUEL</h2>
+                <p className="text-gray-500 text-xs">What drives you? Who do you want to become?</p>
               </div>
             </div>
 
-            <div className="text-center mb-6">
-              <Skull className="mx-auto text-cyber-red mb-4" size={48} />
-              <h2 className="font-display text-2xl font-bold text-white mb-2">
-                THE FEAR
-              </h2>
-              <p className="text-gray-500">What happens if you fail? Your anti-vision.</p>
-            </div>
-
-            <div className="bg-cyber-dark rounded-xl p-4 border border-cyber-red/30">
+            <div className="bg-cyber-dark rounded-lg p-3 border border-cyber-cyan/30 mb-4">
               <textarea
-                value={fear}
-                onChange={(e) => setFear(e.target.value)}
-                placeholder="Example: If I give up, I'll remain stuck, broke, unhealthy, and full of regret..."
-                className="w-full bg-transparent text-white text-sm rounded-lg px-3 py-2 outline-none resize-none h-28 placeholder:text-gray-600"
+                value={fuel}
+                onChange={(e) => setFuel(e.target.value)}
+                placeholder="I want to become a disciplined person who achieves their goals..."
+                className="w-full bg-transparent text-white text-sm rounded-lg px-2 py-1 outline-none resize-none h-20 placeholder:text-gray-600"
                 maxLength={300}
               />
               <div className="flex justify-end">
-                <span className="text-gray-600 text-xs">{fear.length}/300</span>
+                <span className="text-gray-600 text-[10px]">{fuel.length}/300</span>
+              </div>
+            </div>
+
+            {/* The Fear */}
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-full bg-cyber-red/20 flex items-center justify-center flex-shrink-0">
+                <Skull className="text-cyber-red" size={20} />
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-bold text-white">THE FEAR</h2>
+                <p className="text-gray-500 text-xs">What happens if you fail? Your anti-vision.</p>
+              </div>
+            </div>
+
+            <div className="bg-cyber-dark rounded-lg p-3 border border-cyber-red/30">
+              <textarea
+                value={fear}
+                onChange={(e) => setFear(e.target.value)}
+                placeholder="If I give up, I'll remain stuck, broke, and full of regret..."
+                className="w-full bg-transparent text-white text-sm rounded-lg px-2 py-1 outline-none resize-none h-20 placeholder:text-gray-600"
+                maxLength={300}
+              />
+              <div className="flex justify-end">
+                <span className="text-gray-600 text-[10px]">{fear.length}/300</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step: Credits */}
+        {step === 5 && (
+          <div className="animate-fadeIn flex flex-col justify-center items-center flex-1">
+            <div className="text-center">
+              <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-2 border-cyber-cyan/50 animate-pulse-glow">
+                <img
+                  src="https://media.licdn.com/dms/image/v2/D4D03AQEaCeHaN-cHzQ/profile-displayphoto-crop_800_800/B4DZjbqFDCGgAI-/0/1756031899355?e=1769644800&v=beta&t=SO7Zsqb1K4h9U1g55pPa4mdgjy6CACrKa9JsPnKunPk"
+                  alt="Yasser Arafat"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              <p className="text-gray-400 text-sm mb-1">Made with</p>
+              <p className="text-cyber-red text-2xl mb-1">❤</p>
+              <p className="text-gray-400 text-sm mb-3">by</p>
+
+              <h2 className="font-display text-2xl font-bold text-cyber-cyan mb-2">
+                Yasser Arafat
+              </h2>
+
+              <a
+                href="https://www.linkedin.com/in/yasserarafat007"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-cyber-cyan/20 text-cyber-cyan px-4 py-2 rounded-lg text-sm font-medium hover:bg-cyber-cyan/30 transition-all"
+                onClick={() => soundManager.click()}
+              >
+                <User size={16} />
+                Connect on LinkedIn
+              </a>
+
+              <div className="mt-6 bg-cyber-dark/50 rounded-xl p-4 border border-cyber-cyan/20">
+                <p className="text-gray-400 text-xs leading-relaxed">
+                  Built with passion to help you level up your life.
+                  <br />
+                  Transform discipline into power. Arise, Hunter.
+                </p>
               </div>
             </div>
           </div>
         )}
 
         {/* Step: Ready to Awaken */}
-        {step === 5 && (
-          <div className="animate-fadeIn text-center">
-            <Eye className="mx-auto text-cyber-purple mb-4 animate-pulse" size={64} />
-            <h2 className="font-display text-2xl font-bold text-white mb-2">
+        {step === 6 && (
+          <div className="animate-fadeIn text-center flex flex-col justify-center flex-1">
+            <Eye className="mx-auto text-cyber-purple mb-4 animate-pulse" size={56} />
+            <h2 className="font-display text-xl font-bold text-white mb-2">
               READY TO AWAKEN
             </h2>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-500 text-sm mb-4">
               Your purpose is set. Your path is clear.
             </p>
 
-            <div className="bg-gradient-to-b from-cyber-purple/20 to-transparent rounded-xl p-6 border border-cyber-purple/30">
-              <p className="text-gray-300 leading-relaxed">
+            <div className="bg-gradient-to-b from-cyber-purple/20 to-transparent rounded-xl p-4 border border-cyber-purple/30">
+              <p className="text-gray-300 text-sm leading-relaxed">
                 THE SYSTEM will now bind to your soul.
                 <br /><br />
                 <span className="text-cyber-cyan font-bold">Discipline</span> becomes <span className="text-cyber-gold font-bold">Power</span>.
                 <br /><br />
-                <span className="text-gray-500 text-sm">There is no turning back.</span>
+                <span className="text-gray-500 text-xs">There is no turning back.</span>
               </p>
             </div>
           </div>
@@ -1427,7 +1479,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 };
 
 // ==================== REFLECT PAGE ====================
-const Dashboard = ({ state, onLoginReward, showNotification, soundEnabled, onToggleSound }) => {
+const Dashboard = ({ state, onLoginReward, showNotification }) => {
   const { player, habits, habitLog, habitStreaks, questLog } = state;
   const today = getToday();
 
@@ -1505,10 +1557,14 @@ const Dashboard = ({ state, onLoginReward, showNotification, soundEnabled, onTog
 
     // Quest log stats for the week
     (questLog || []).forEach(q => {
-      const qDate = q.completedAt?.split('T')[0];
-      if (dates.includes(qDate)) {
-        if (q.completed) questsCompleted++;
-        else questsFailed++;
+      if (q.completedAt) {
+        // Convert ISO timestamp to local date
+        const d = new Date(q.completedAt);
+        const qDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        if (dates.includes(qDate)) {
+          if (q.completed) questsCompleted++;
+          else questsFailed++;
+        }
       }
     });
 
@@ -1527,8 +1583,11 @@ const Dashboard = ({ state, onLoginReward, showNotification, soundEnabled, onTog
   // Calculate month stats
   const monthHabitsCompleted = currentMonthDates.reduce((sum, date) => sum + (habitLog[date]?.length || 0), 0);
   const monthQuestsCompleted = (questLog || []).filter(q => {
-    const qDate = q.completedAt?.split('T')[0];
-    return currentMonthDates.includes(qDate) && q.completed;
+    if (!q.completedAt || !q.completed) return false;
+    // Convert ISO timestamp to local date
+    const d = new Date(q.completedAt);
+    const qDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return currentMonthDates.includes(qDate);
   }).length;
 
   // Actual active days (days with at least one habit or quest activity)
@@ -1545,7 +1604,9 @@ const Dashboard = ({ state, onLoginReward, showNotification, soundEnabled, onTog
     // Add dates from quest log
     (questLog || []).forEach(q => {
       if (q.completedAt) {
-        const qDate = q.completedAt.split('T')[0];
+        // Convert ISO timestamp to local date
+        const d = new Date(q.completedAt);
+        const qDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         activeDates.add(qDate);
       }
     });
@@ -1557,7 +1618,12 @@ const Dashboard = ({ state, onLoginReward, showNotification, soundEnabled, onTog
   const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
   // Get first day of month offset (for the selected month)
-  const firstDayOffset = currentMonthDates.length > 0 ? new Date(currentMonthDates[0]).getDay() : 0;
+  const firstDayOffset = (() => {
+    if (currentMonthDates.length === 0) return 0;
+    // Parse date string manually to avoid timezone issues
+    const [year, month, day] = currentMonthDates[0].split('-').map(Number);
+    return new Date(year, month - 1, day).getDay();
+  })();
 
   return (
     <div className="h-full overflow-y-auto pb-4 px-4">
@@ -1616,18 +1682,10 @@ const Dashboard = ({ state, onLoginReward, showNotification, soundEnabled, onTog
 
       {/* Header */}
       <div className="flex items-center justify-between py-4">
-        <div>
-          <p className="text-gray-500 text-[10px] tracking-widest">HUNTER {player.name?.toUpperCase()}</p>
-          <h1 className="font-display text-xl font-black text-white flex items-center gap-2">
-            <Eye className="text-cyber-cyan" size={20} /> Reflect
-          </h1>
-        </div>
-        <button
-          onClick={onToggleSound}
-          className="p-2 rounded-lg bg-cyber-gray/50 text-gray-400 hover:text-cyber-cyan transition-colors btn-press"
-        >
-          {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-        </button>
+        <h1 className="font-display text-xl font-black text-white flex items-center gap-2">
+          <Eye className="text-cyber-cyan" size={20} /> Reflect
+        </h1>
+        <p className="text-gray-500 text-[10px] tracking-widest">HUNTER {player.name?.toUpperCase()}</p>
       </div>
 
       {/* Daily Check-in Button */}
@@ -1645,28 +1703,37 @@ const Dashboard = ({ state, onLoginReward, showNotification, soundEnabled, onTog
 
       {/* Current Status Card */}
       <div className="bg-cyber-dark rounded-xl p-4 glow-border-cyan mb-3">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-gray-500 text-[10px] uppercase tracking-wider">Power Level</p>
-            <p className="font-display text-3xl font-black text-white">{powerLevel.toLocaleString()}</p>
-          </div>
+        {/* Main Row: Icon + Power Level + Road to Next */}
+        <div className="flex items-center gap-3 mb-3">
+          {/* Rank Icon */}
           <button
             onClick={() => { soundManager.click(); setShowRanksModal(true); }}
-            className="flex flex-col items-center gap-1 bg-cyber-gray/50 rounded-xl px-3 py-2 hover:bg-cyber-gray/70 transition-all btn-press"
+            className="flex-shrink-0 hover:scale-105 transition-transform btn-press"
           >
-            <img src={rank.icon} alt={rank.name} className="w-12 h-12 object-contain" />
-            <p className="font-display font-bold text-[10px]" style={{ color: rank.color }}>{rank.name}</p>
+            <img src={rank.icon} alt={rank.name} className="w-14 h-14 object-contain" style={{ filter: `drop-shadow(0 0 8px ${rank.color}40)` }} />
           </button>
-        </div>
 
-        {/* XP Progress */}
-        <div className="mb-3">
-          <div className="flex justify-between text-[10px] mb-1">
-            <span className="text-cyber-cyan">{xpProgress.current.toLocaleString()} / {xpProgress.total.toLocaleString()} XP</span>
-            {nextRank && <span className="text-gray-500">Next: {nextRank.name}</span>}
+          {/* Power Level */}
+          <div className="flex-shrink-0">
+            <p className="text-gray-500 text-[10px] uppercase tracking-wider">Power</p>
+            <p className="font-display text-2xl font-black text-white">{powerLevel.toLocaleString()}</p>
           </div>
-          <div className="h-2 bg-cyber-gray rounded-full overflow-hidden">
-            <div className="h-full progress-bar-xp rounded-full transition-all" style={{ width: `${xpProgress.percent}%` }} />
+
+          {/* Divider */}
+          <div className="w-px h-10 bg-gray-700 mx-1" />
+
+          {/* Road to Next Rank */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-gray-500 text-[10px] uppercase tracking-wider">
+                {nextRank ? `Road to ${nextRank.name}` : 'Max Rank'}
+              </p>
+              <p className="text-cyber-cyan text-[10px] font-bold">{Math.round(xpProgress.percent)}%</p>
+            </div>
+            <div className="h-2 bg-cyber-gray rounded-full overflow-hidden">
+              <div className="h-full progress-bar-xp rounded-full transition-all" style={{ width: `${xpProgress.percent}%` }} />
+            </div>
+            <p className="text-gray-600 text-[9px] mt-1">{xpProgress.current.toLocaleString()} / {xpProgress.total.toLocaleString()} XP</p>
           </div>
         </div>
 
@@ -1836,7 +1903,8 @@ const Dashboard = ({ state, onLoginReward, showNotification, soundEnabled, onTog
 
           {/* Day cells */}
           {currentMonthDates.map((date) => {
-            const dayNum = new Date(date).getDate();
+            // Parse date string manually to avoid timezone issues
+            const dayNum = parseInt(date.split('-')[2], 10);
             const habitsCount = habitLog[date]?.length || 0;
             const isToday = date === today && monthOffset === 0;
             const intensity = Math.min(5, habitsCount);
@@ -1907,13 +1975,6 @@ const Dashboard = ({ state, onLoginReward, showNotification, soundEnabled, onTog
         </div>
       )}
 
-      {/* Vision Reminder */}
-      {state.vision.fuel && (
-        <div className="bg-gradient-to-r from-cyber-purple/10 to-transparent rounded-xl p-3 border-l-2 border-cyber-purple">
-          <p className="text-[10px] text-cyber-purple uppercase tracking-wider mb-1">Why We Do This</p>
-          <p className="text-gray-300 text-xs line-clamp-2">{state.vision.fuel}</p>
-        </div>
-      )}
     </div>
   );
 };
@@ -2474,9 +2535,7 @@ const TAB_INFO = {
   awakening: { label: 'Settings', icon: Shield }
 };
 
-const Settings = ({ state, onUpdateVision, onResetSystem, onImportData, showNotification, tabOrder, onUpdateTabOrder }) => {
-  const [editing, setEditing] = useState(null);
-  const [tempVision, setTempVision] = useState(state.vision);
+const Settings = ({ state, onResetSystem, onImportData, showNotification, tabOrder, onUpdateTabOrder, soundEnabled, onToggleSound, hapticsEnabled, onToggleHaptics }) => {
   const [resetConfirm, setResetConfirm] = useState('');
   const [showResetWarning, setShowResetWarning] = useState(false);
   const [showTabOrderModal, setShowTabOrderModal] = useState(false);
@@ -2499,13 +2558,6 @@ const Settings = ({ state, onUpdateVision, onResetSystem, onImportData, showNoti
     onUpdateTabOrder(tempTabOrder);
     setShowTabOrderModal(false);
     showNotification('Tab order saved!', 'success');
-  };
-
-  const handleSave = (type) => {
-    onUpdateVision({ ...state.vision, [type]: tempVision[type] });
-    setEditing(null);
-    soundManager.success();
-    showNotification('Saved!', 'success');
   };
 
   const handleReset = () => {
@@ -2636,110 +2688,47 @@ const Settings = ({ state, onUpdateVision, onResetSystem, onImportData, showNoti
         <p className="text-cyber-purple text-xs mt-2 text-right">— {todayQuote.a}</p>
       </div>
 
-      {/* Vision Section */}
-      <div className="mb-4">
-        <p className="text-gray-500 text-xs uppercase tracking-wider mb-2 px-1">Your Why</p>
-
-        {/* The Fuel - Compact Line Item */}
-        <div className="bg-cyber-dark rounded-lg mb-2 overflow-hidden">
-          {editing === 'fuel' ? (
-            <div className="p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-cyber-cyan text-xs font-bold flex items-center gap-1">
-                  <Crown size={12} /> THE FUEL
-                </span>
-                <button
-                  onClick={() => handleSave('fuel')}
-                  className="text-cyber-green text-xs font-bold flex items-center gap-1 px-2 py-1 bg-cyber-green/20 rounded"
-                >
-                  <Save size={12} /> Save
-                </button>
-              </div>
-              <textarea
-                value={tempVision.fuel}
-                onChange={e => setTempVision({ ...tempVision, fuel: e.target.value })}
-                className="w-full bg-cyber-gray text-white text-sm rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-cyber-cyan resize-none h-20"
-                placeholder="Who do you want to become?"
-                autoFocus
-              />
-            </div>
-          ) : (
-            <button
-              onClick={() => {
-                soundManager.click();
-                setEditing('fuel');
-                setTempVision({ ...state.vision });
-              }}
-              className="w-full flex items-center justify-between p-3 hover:bg-cyber-gray/30 transition-all"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-cyber-cyan/20 flex items-center justify-center">
-                  <Crown size={16} className="text-cyber-cyan" />
-                </div>
-                <div className="text-left">
-                  <p className="text-white text-sm font-medium">The Fuel</p>
-                  <p className="text-gray-500 text-xs truncate max-w-[200px]">
-                    {state.vision.fuel || 'Define your vision...'}
-                  </p>
-                </div>
-              </div>
-              <ChevronRight size={16} className="text-gray-500" />
-            </button>
-          )}
-        </div>
-
-        {/* The Fear - Compact Line Item */}
-        <div className="bg-cyber-dark rounded-lg overflow-hidden">
-          {editing === 'fear' ? (
-            <div className="p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-cyber-red text-xs font-bold flex items-center gap-1">
-                  <Skull size={12} /> THE FEAR
-                </span>
-                <button
-                  onClick={() => handleSave('fear')}
-                  className="text-cyber-green text-xs font-bold flex items-center gap-1 px-2 py-1 bg-cyber-green/20 rounded"
-                >
-                  <Save size={12} /> Save
-                </button>
-              </div>
-              <textarea
-                value={tempVision.fear}
-                onChange={e => setTempVision({ ...tempVision, fear: e.target.value })}
-                className="w-full bg-cyber-gray text-white text-sm rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-cyber-red resize-none h-20"
-                placeholder="What happens if you fail?"
-                autoFocus
-              />
-            </div>
-          ) : (
-            <button
-              onClick={() => {
-                soundManager.click();
-                setEditing('fear');
-                setTempVision({ ...state.vision });
-              }}
-              className="w-full flex items-center justify-between p-3 hover:bg-cyber-gray/30 transition-all"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-cyber-red/20 flex items-center justify-center">
-                  <Skull size={16} className="text-cyber-red" />
-                </div>
-                <div className="text-left">
-                  <p className="text-white text-sm font-medium">The Fear</p>
-                  <p className="text-gray-500 text-xs truncate max-w-[200px]">
-                    {state.vision.fear || 'Define your anti-vision...'}
-                  </p>
-                </div>
-              </div>
-              <ChevronRight size={16} className="text-gray-500" />
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* Preferences Section */}
       <div className="mb-4">
         <p className="text-gray-500 text-xs uppercase tracking-wider mb-2 px-1">Preferences</p>
+
+        {/* Sound Toggle */}
+        <button
+          onClick={onToggleSound}
+          className="w-full bg-cyber-dark rounded-lg flex items-center justify-between p-3 hover:bg-cyber-gray/30 transition-all mb-2"
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${soundEnabled ? 'bg-cyber-cyan/20' : 'bg-gray-700/50'}`}>
+              {soundEnabled ? <Volume2 size={16} className="text-cyber-cyan" /> : <VolumeX size={16} className="text-gray-500" />}
+            </div>
+            <div className="text-left">
+              <p className="text-white text-sm font-medium">Sound Effects</p>
+              <p className="text-gray-500 text-xs">UI sounds and feedback</p>
+            </div>
+          </div>
+          <div className={`w-11 h-6 rounded-full relative transition-colors ${soundEnabled ? 'bg-cyber-cyan' : 'bg-gray-700'}`}>
+            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${soundEnabled ? 'left-6' : 'left-1'}`} />
+          </div>
+        </button>
+
+        {/* Vibration Toggle */}
+        <button
+          onClick={onToggleHaptics}
+          className="w-full bg-cyber-dark rounded-lg flex items-center justify-between p-3 hover:bg-cyber-gray/30 transition-all mb-2"
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${hapticsEnabled ? 'bg-cyber-purple/20' : 'bg-gray-700/50'}`}>
+              <Smartphone size={16} className={hapticsEnabled ? 'text-cyber-purple' : 'text-gray-500'} />
+            </div>
+            <div className="text-left">
+              <p className="text-white text-sm font-medium">Vibration</p>
+              <p className="text-gray-500 text-xs">Haptic feedback on actions</p>
+            </div>
+          </div>
+          <div className={`w-11 h-6 rounded-full relative transition-colors ${hapticsEnabled ? 'bg-cyber-purple' : 'bg-gray-700'}`}>
+            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${hapticsEnabled ? 'left-6' : 'left-1'}`} />
+          </div>
+        </button>
 
         {/* Tab Order */}
         <button
@@ -2751,8 +2740,8 @@ const Settings = ({ state, onUpdateVision, onResetSystem, onImportData, showNoti
           className="w-full bg-cyber-dark rounded-lg flex items-center justify-between p-3 hover:bg-cyber-gray/30 transition-all"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-cyber-cyan/20 flex items-center justify-center">
-              <GripVertical size={16} className="text-cyber-cyan" />
+            <div className="w-8 h-8 rounded-lg bg-cyber-gold/20 flex items-center justify-center">
+              <GripVertical size={16} className="text-cyber-gold" />
             </div>
             <div className="text-left">
               <p className="text-white text-sm font-medium">Tab Order</p>
@@ -2823,6 +2812,31 @@ const Settings = ({ state, onUpdateVision, onResetSystem, onImportData, showNoti
           </div>
           <ChevronRight size={16} className="text-gray-500" />
         </button>
+      </div>
+
+      {/* Credits */}
+      <div className="mt-4">
+        <p className="text-gray-500 text-xs uppercase tracking-wider mb-2 px-1">About</p>
+        <a
+          href="https://www.linkedin.com/in/yasserarafat007"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => soundManager.click()}
+          className="w-full bg-cyber-dark rounded-lg flex items-center justify-between p-3 hover:bg-cyber-gray/30 transition-all group"
+        >
+          <div className="flex items-center gap-3">
+            <img
+              src="https://media.licdn.com/dms/image/v2/D4D03AQEaCeHaN-cHzQ/profile-displayphoto-crop_800_800/B4DZjbqFDCGgAI-/0/1756031899355?e=1769644800&v=beta&t=SO7Zsqb1K4h9U1g55pPa4mdgjy6CACrKa9JsPnKunPk"
+              alt="Yasser Arafat"
+              className="w-8 h-8 rounded-lg object-cover"
+            />
+            <div className="text-left">
+              <p className="text-white text-sm font-medium">Made by Yasser Arafat</p>
+              <p className="text-gray-500 text-xs">Connect on LinkedIn</p>
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-gray-500 group-hover:text-cyber-cyan transition-colors" />
+        </a>
       </div>
 
       {/* Reset Confirmation Modal - Compact */}
@@ -3646,6 +3660,10 @@ const App = () => {
     const saved = localStorage.getItem('theSystemSound');
     return saved !== 'false';
   });
+  const [hapticsEnabled, setHapticsEnabled] = useState(() => {
+    const saved = localStorage.getItem('theSystemHaptics');
+    return saved !== 'false';
+  });
 
   // PWA Install Prompt States
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -3661,8 +3679,19 @@ const App = () => {
     localStorage.setItem('theSystemSound', soundEnabled.toString());
   }, [soundEnabled]);
 
+  // Update haptics when haptics enabled changes
+  useEffect(() => {
+    soundManager.setHapticsEnabled(hapticsEnabled);
+    localStorage.setItem('theSystemHaptics', hapticsEnabled.toString());
+  }, [hapticsEnabled]);
+
   const toggleSound = () => {
     setSoundEnabled(prev => !prev);
+    soundManager.click();
+  };
+
+  const toggleHaptics = () => {
+    setHapticsEnabled(prev => !prev);
     soundManager.click();
   };
 
@@ -3869,8 +3898,11 @@ const App = () => {
     const lastLogin = state.player.lastLoginDate;
 
     if (lastLogin && lastLogin !== today) {
-      const lastDate = new Date(lastLogin);
-      const todayDate = new Date(today);
+      // Parse date strings manually to avoid timezone issues
+      const [lastYear, lastMonth, lastDay] = lastLogin.split('-').map(Number);
+      const [todayYear, todayMonth, todayDay] = today.split('-').map(Number);
+      const lastDate = new Date(lastYear, lastMonth - 1, lastDay);
+      const todayDate = new Date(todayYear, todayMonth - 1, todayDay);
       const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
 
       if (diffDays > 1) {
@@ -4323,10 +4355,7 @@ const App = () => {
           <Dashboard
             state={state}
             onLoginReward={handleLoginReward}
-            onToggleHabit={handleToggleHabit}
             showNotification={showNotification}
-            soundEnabled={soundEnabled}
-            onToggleSound={toggleSound}
           />
         )}
         {activeTab === 'quests' && (
@@ -4344,12 +4373,15 @@ const App = () => {
         {activeTab === 'awakening' && (
           <Settings
             state={state}
-            onUpdateVision={handleUpdateVision}
             onResetSystem={handleResetSystem}
             onImportData={handleImportData}
             showNotification={showNotification}
             tabOrder={customTabOrder}
             onUpdateTabOrder={handleUpdateTabOrder}
+            soundEnabled={soundEnabled}
+            onToggleSound={toggleSound}
+            hapticsEnabled={hapticsEnabled}
+            onToggleHaptics={toggleHaptics}
           />
         )}
         {activeTab === 'habits' && (
