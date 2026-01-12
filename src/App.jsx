@@ -386,14 +386,17 @@ const soundManager = new SoundManager();
 const SoundContext = createContext(soundManager);
 
 // ==================== CONSTANTS ====================
+// Base URL for assets (handles GitHub Pages subdirectory)
+const BASE_URL = import.meta.env.BASE_URL || '/';
+
 // 6-Level System: Each level = a rank, XP thresholds increase
 const RANKS = [
-  { name: 'Silver', level: 1, minXp: 0, color: '#c0c0c0', title: 'The Journey Begins', icon: '/Silver_1_Rank.png' },
-  { name: 'Gold', level: 2, minXp: 500, color: '#ffd700', title: 'Rising Hunter', icon: '/Gold_1_Rank.png' },
-  { name: 'Platinum', level: 3, minXp: 1500, color: '#00ff88', title: 'Proven Warrior', icon: '/Platinum_1_Rank.png' },
-  { name: 'Diamond', level: 4, minXp: 4000, color: '#00ffff', title: 'Elite Discipline', icon: '/Diamond_1_Rank.png' },
-  { name: 'Immortal', level: 5, minXp: 10000, color: '#9d4edd', title: 'Unbreakable Will', icon: '/Immortal_1_Rank.png' },
-  { name: 'Radiant', level: 6, minXp: 25000, color: '#ff6600', title: 'Shadow Monarch', icon: '/Radiant_Rank.png' }
+  { name: 'Silver', level: 1, minXp: 0, color: '#c0c0c0', title: 'The Journey Begins', icon: `${BASE_URL}Silver_1_Rank.png` },
+  { name: 'Gold', level: 2, minXp: 500, color: '#ffd700', title: 'Rising Hunter', icon: `${BASE_URL}Gold_1_Rank.png` },
+  { name: 'Platinum', level: 3, minXp: 1500, color: '#00ff88', title: 'Proven Warrior', icon: `${BASE_URL}Platinum_1_Rank.png` },
+  { name: 'Diamond', level: 4, minXp: 4000, color: '#00ffff', title: 'Elite Discipline', icon: `${BASE_URL}Diamond_1_Rank.png` },
+  { name: 'Immortal', level: 5, minXp: 10000, color: '#9d4edd', title: 'Unbreakable Will', icon: `${BASE_URL}Immortal_1_Rank.png` },
+  { name: 'Radiant', level: 6, minXp: 25000, color: '#ff6600', title: 'Shadow Monarch', icon: `${BASE_URL}Radiant_Rank.png` }
 ];
 
 // Quest Priority Ranks (Threat Levels)
@@ -1068,14 +1071,14 @@ const Onboarding = ({ onComplete }) => {
             <input
               type="text"
               value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
+              onChange={(e) => setPlayerName(e.target.value.trimStart())}
               placeholder="Enter your name..."
               className="w-full bg-cyber-gray text-white text-center text-xl rounded-xl px-6 py-4 outline-none focus:ring-2 focus:ring-cyber-cyan mb-4 font-display"
               maxLength={20}
             />
 
             <p className="text-gray-600 text-sm">
-              {playerName ? `Welcome, ${playerName}.` : 'Choose wisely, Hunter.'}
+              {playerName ? `Welcome, ${playerName.trim()}` : 'Choose wisely, Hunter.'}
             </p>
           </div>
         )}
@@ -3695,9 +3698,6 @@ const App = () => {
     soundManager.click();
   };
 
-  // Check if on iOS
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
   // Swipe navigation
   const touchStart = useRef({ x: 0, y: 0 });
   const touchEnd = useRef({ x: 0, y: 0 });
@@ -3749,11 +3749,11 @@ const App = () => {
 
     // Calculate swipe progress for gooey animation (-1 to 1)
     const screenWidth = window.innerWidth;
-    const maxSwipeDistance = screenWidth * 0.4; // 40% of screen = full progress
+    const maxSwipeDistance = screenWidth * 0.3; // 30% of screen = full progress
     const normalizedProgress = Math.max(-1, Math.min(1, deltaX / maxSwipeDistance));
 
-    // Only show indicator for clearly horizontal swipes (2:1 ratio)
-    if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 2) {
+    // Show indicator at the slightest horizontal movement (15px threshold, 1.5:1 ratio)
+    if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
       const currentIndex = tabOrder.indexOf(activeTab);
       if (deltaX > 0 && currentIndex < tabOrder.length - 1) {
         setSwipeIndicator('left');
@@ -3805,7 +3805,7 @@ const App = () => {
     }
   };
 
-  // PWA Install Prompt Effect
+  // PWA Install Prompt Effect - capture beforeinstallprompt
   useEffect(() => {
     // Check if already installed
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
@@ -3821,11 +3821,6 @@ const App = () => {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-
-      // Show install banner after onboarding (every time until installed)
-      if (state.onboarded) {
-        setTimeout(() => setShowInstallBanner(true), 2000);
-      }
     };
 
     // Listen for successful installation
@@ -3839,35 +3834,33 @@ const App = () => {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // For iOS, show install banner after onboarding (every time until installed)
-    if (isIOS && state.onboarded) {
-      setTimeout(() => setShowInstallBanner(true), 2000);
-    }
-
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, [state.onboarded, isIOS]);
+  }, []);
+
+  // Show install banner after onboarding
+  useEffect(() => {
+    if (state.onboarded && !isPwaInstalled) {
+      const timer = setTimeout(() => setShowInstallBanner(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [state.onboarded, isPwaInstalled]);
 
   // Handle PWA Install
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-
     soundManager.click();
-    deferredPrompt.prompt();
 
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      soundManager.success();
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        soundManager.success();
+      }
+      setDeferredPrompt(null);
     }
-    setDeferredPrompt(null);
-    setShowInstallBanner(false);
-  };
 
-  // Handle dismiss install banner (only for current session)
-  const handleDismissInstall = () => {
-    soundManager.click();
     setShowInstallBanner(false);
   };
 
@@ -4309,38 +4302,78 @@ const App = () => {
             </div>
 
             <button
-              onClick={handleDismissInstall}
+              onClick={handleInstallClick}
               className="w-full py-3 rounded-lg bg-cyber-cyan text-black font-bold transition-all hover:bg-cyan-400 btn-press"
             >
-              Got it
+              {deferredPrompt ? 'INSTALL' : 'Got it'}
             </button>
           </div>
         </div>
       )}
 
-      {/* Swipe Indicator */}
+      {/* Swipe Indicator - Edge Glow + Animated Arrows */}
       {swipeIndicator && (
-        <div className="fixed inset-0 pointer-events-none z-30 flex items-center justify-center">
-          <div className={`flex items-center gap-2 px-6 py-3 rounded-full bg-black/70 border border-cyber-cyan/50 animate-fadeIn ${
-            swipeIndicator === 'left' ? 'translate-x-4' : '-translate-x-4'
-          } transition-transform`}>
-            {swipeIndicator === 'right' && (
-              <>
-                <ChevronLeft className="w-6 h-6 text-cyber-cyan animate-pulse" />
-                <ChevronLeft className="w-6 h-6 text-cyber-cyan/50 -ml-4 animate-pulse" style={{ animationDelay: '0.1s' }} />
-              </>
-            )}
-            <span className="text-cyber-cyan font-display text-sm">
-              {swipeIndicator === 'left' ? tabOrder[tabOrder.indexOf(activeTab) + 1]?.toUpperCase() : tabOrder[tabOrder.indexOf(activeTab) - 1]?.toUpperCase()}
-            </span>
-            {swipeIndicator === 'left' && (
-              <>
-                <ChevronRight className="w-6 h-6 text-cyber-cyan/50 -mr-4 animate-pulse" />
-                <ChevronRight className="w-6 h-6 text-cyber-cyan animate-pulse" style={{ animationDelay: '0.1s' }} />
-              </>
-            )}
+        <>
+          {/* Edge Glow Effect */}
+          <div
+            className="fixed inset-y-0 w-24 pointer-events-none z-30 transition-opacity"
+            style={{
+              [swipeIndicator === 'left' ? 'right' : 'left']: 0,
+              background: `linear-gradient(${swipeIndicator === 'left' ? 'to left' : 'to right'}, rgba(0,255,255,${Math.abs(swipeProgress) * 0.4}) 0%, transparent 100%)`,
+              boxShadow: `${swipeIndicator === 'left' ? '-' : ''}20px 0 60px rgba(0,255,255,${Math.abs(swipeProgress) * 0.6})`
+            }}
+          />
+
+          {/* Animated Arrows on Edge */}
+          <div
+            className="fixed inset-y-0 flex flex-col items-center justify-center pointer-events-none z-40"
+            style={{
+              [swipeIndicator === 'left' ? 'right' : 'left']: '8px',
+              opacity: Math.min(1, Math.abs(swipeProgress) * 2)
+            }}
+          >
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="animate-bounce"
+                style={{
+                  animationDelay: `${i * 0.1}s`,
+                  animationDuration: '0.6s'
+                }}
+              >
+                {swipeIndicator === 'left' ? (
+                  <ChevronRight
+                    className="w-8 h-8 text-cyber-cyan drop-shadow-[0_0_10px_rgba(0,255,255,0.8)]"
+                    style={{ filter: `drop-shadow(0 0 ${10 + Math.abs(swipeProgress) * 15}px rgba(0,255,255,0.9))` }}
+                  />
+                ) : (
+                  <ChevronLeft
+                    className="w-8 h-8 text-cyber-cyan drop-shadow-[0_0_10px_rgba(0,255,255,0.8)]"
+                    style={{ filter: `drop-shadow(0 0 ${10 + Math.abs(swipeProgress) * 15}px rgba(0,255,255,0.9))` }}
+                  />
+                )}
+              </div>
+            ))}
           </div>
-        </div>
+
+          {/* Center Label */}
+          <div className="fixed inset-0 pointer-events-none z-30 flex items-center justify-center">
+            <div
+              className="px-6 py-3 rounded-full bg-black/80 border-2 border-cyber-cyan"
+              style={{
+                boxShadow: `0 0 ${20 + Math.abs(swipeProgress) * 30}px rgba(0,255,255,0.5)`,
+                transform: `scale(${0.8 + Math.abs(swipeProgress) * 0.3})`,
+                opacity: Math.min(1, Math.abs(swipeProgress) * 1.5)
+              }}
+            >
+              <span className="text-cyber-cyan font-display text-lg font-bold tracking-wider">
+                {swipeIndicator === 'left'
+                  ? tabOrder[tabOrder.indexOf(activeTab) + 1]?.toUpperCase()
+                  : tabOrder[tabOrder.indexOf(activeTab) - 1]?.toUpperCase()}
+              </span>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Main Content */}
