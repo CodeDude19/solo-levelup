@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --cyber-cyan: #00ffff;
+  --cyber-gold: #ffd700;
+  --cyber-red: #ff3333;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  background-color: #000000;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0f;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #00ffff40;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00ffff80;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px var(--cyber-cyan); }
+  50% { box-shadow: 0 0 20px var(--cyber-cyan), 0 0 30px var(--cyber-cyan); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes levelUp {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.2); filter: brightness(2); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes coinSpin {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.4s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.animate-levelUp {
+  animation: levelUp 0.6s ease-in-out;
+}
+
+.animate-coinSpin {
+  animation: coinSpin 0.5s ease-in-out;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #00ffff, #00ff88);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-gold {
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glowing borders */
+.glow-border-cyan {
+  border: 1px solid #00ffff40;
+  box-shadow: 0 0 10px #00ffff20, inset 0 0 10px #00ffff10;
+}
+
+.glow-border-gold {
+  border: 1px solid #ffd70040;
+  box-shadow: 0 0 10px #ffd70020, inset 0 0 10px #ffd70010;
+}
+
+.glow-border-red {
+  border: 1px solid #ff333340;
+  box-shadow: 0 0 10px #ff333320, inset 0 0 10px #ff333310;
+}
+
+/* Progress bar styles */
+.progress-bar-xp {
+  background: linear-gradient(90deg, #00ffff, #00ff88);
+  box-shadow: 0 0 10px #00ffff80;
+}
+
+.progress-bar-health {
+  background: linear-gradient(90deg, #ff3333, #ff6666);
+  box-shadow: 0 0 10px #ff333380;
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px #00ffff30;
+}
+
+/* Button press effect */
+.btn-press:active {
+  transform: scale(0.95);
+}
+
+/* Heatmap cell colors */
+.heatmap-0 { background-color: #1a1a2e; }
+.heatmap-1 { background-color: #003333; }
+.heatmap-2 { background-color: #006666; }
+.heatmap-3 { background-color: #009999; }
+.heatmap-4 { background-color: #00cccc; }
+.heatmap-5 { background-color: #00ffff; }
