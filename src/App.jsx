@@ -383,15 +383,14 @@ const soundManager = new SoundManager();
 const SoundContext = createContext(soundManager);
 
 // ==================== CONSTANTS ====================
+// 6-Level System: Each level = a rank, XP thresholds increase
 const RANKS = [
-  { name: 'E-Rank', minLevel: 1, color: '#808080', title: 'Novice Hunter' },
-  { name: 'D-Rank', minLevel: 5, color: '#00ff88', title: 'Apprentice' },
-  { name: 'C-Rank', minLevel: 10, color: '#00ffff', title: 'Warrior' },
-  { name: 'B-Rank', minLevel: 20, color: '#9d4edd', title: 'Elite Hunter' },
-  { name: 'A-Rank', minLevel: 35, color: '#ffd700', title: 'Master' },
-  { name: 'S-Rank', minLevel: 50, color: '#ff6600', title: 'Champion' },
-  { name: 'National', minLevel: 70, color: '#ff3333', title: 'Legend' },
-  { name: 'Monarch', minLevel: 100, color: '#ffffff', title: 'Shadow Monarch' }
+  { name: 'Silver', level: 1, minXp: 0, color: '#c0c0c0', title: 'The Journey Begins', icon: '/Silver_1_Rank.png' },
+  { name: 'Gold', level: 2, minXp: 500, color: '#ffd700', title: 'Rising Hunter', icon: '/Gold_1_Rank.png' },
+  { name: 'Platinum', level: 3, minXp: 1500, color: '#00ff88', title: 'Proven Warrior', icon: '/Platinum_1_Rank.png' },
+  { name: 'Diamond', level: 4, minXp: 4000, color: '#00ffff', title: 'Elite Discipline', icon: '/Diamond_1_Rank.png' },
+  { name: 'Immortal', level: 5, minXp: 10000, color: '#9d4edd', title: 'Unbreakable Will', icon: '/Immortal_1_Rank.png' },
+  { name: 'Radiant', level: 6, minXp: 25000, color: '#ff6600', title: 'Shadow Monarch', icon: '/Radiant_Rank.png' }
 ];
 
 // Quest Priority Ranks (Threat Levels)
@@ -579,7 +578,6 @@ const TRACKS = [
   }
 ];
 
-const XP_PER_LEVEL = 1000;
 const DAILY_LOGIN_XP = 50;
 const MISSED_DAY_PENALTY = 100;
 const MAX_HEALTH = 100;
@@ -588,24 +586,39 @@ const STREAK_BREAK_PENALTY = 20;
 // DEFAULT_HABITS removed - now track-based
 
 // ==================== HELPER FUNCTIONS ====================
-const getToday = () => new Date().toISOString().split('T')[0];
+const getToday = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+};
 
-const getRank = (level) => {
+// Get current rank based on total XP
+const getRank = (totalXp) => {
   for (let i = RANKS.length - 1; i >= 0; i--) {
-    if (level >= RANKS[i].minLevel) return RANKS[i];
+    if (totalXp >= RANKS[i].minXp) return RANKS[i];
   }
   return RANKS[0];
 };
 
-const getNextRank = (level) => {
+// Get next rank (if any)
+const getNextRank = (totalXp) => {
   for (let i = 0; i < RANKS.length; i++) {
-    if (level < RANKS[i].minLevel) return RANKS[i];
+    if (totalXp < RANKS[i].minXp) return RANKS[i];
   }
   return null;
 };
 
-const calculateLevel = (totalXp) => Math.floor(totalXp / XP_PER_LEVEL) + 1;
-const calculateXpProgress = (totalXp) => totalXp % XP_PER_LEVEL;
+// Get level (1-6) based on XP
+const calculateLevel = (totalXp) => getRank(totalXp).level;
+
+// Get XP progress within current rank (for progress bar)
+const calculateXpProgress = (totalXp) => {
+  const currentRank = getRank(totalXp);
+  const nextRank = getNextRank(totalXp);
+  if (!nextRank) return { current: totalXp - currentRank.minXp, total: 0, percent: 100 };
+  const currentInRank = totalXp - currentRank.minXp;
+  const totalForRank = nextRank.minXp - currentRank.minXp;
+  return { current: currentInRank, total: totalForRank, percent: (currentInRank / totalForRank) * 100 };
+};
 
 const formatTimeRemaining = (targetDate) => {
   const now = new Date();
@@ -768,12 +781,12 @@ const LevelUpCelebration = ({ level, rank, onClose }) => {
         {phase >= 1 && (
           <div className={`transition-all duration-700 ${phase >= 2 ? 'opacity-100 scale-100' : 'opacity-0 scale-150'}`}>
             <div className="relative">
-              <div className="text-[120px] font-display font-black text-white animate-levelNumber">
-                {level}
-              </div>
-              <div className="absolute inset-0 text-[120px] font-display font-black text-cyber-cyan opacity-50 blur-lg animate-pulse">
-                {level}
-              </div>
+              <img
+                src={rank.icon}
+                alt={rank.name}
+                className="w-32 h-32 mx-auto object-contain animate-levelNumber"
+                style={{ filter: `drop-shadow(0 0 30px ${rank.color})` }}
+              />
             </div>
           </div>
         )}
@@ -846,10 +859,11 @@ const RankUpCelebration = ({ rank, onClose }) => {
         {phase >= 2 && (
           <div className={`transition-all duration-700 ${phase >= 3 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
             <div className="relative py-8">
-              <Crown
-                className="mx-auto mb-4 animate-bounce"
-                size={64}
-                style={{ color: rank.color }}
+              <img
+                src={rank.icon}
+                alt={rank.name}
+                className="mx-auto mb-4 w-24 h-24 object-contain animate-bounce"
+                style={{ filter: `drop-shadow(0 0 20px ${rank.color})` }}
               />
               <h1
                 className="font-display text-5xl font-black tracking-wider animate-rankReveal"
@@ -948,12 +962,15 @@ const Onboarding = ({ onComplete }) => {
   const [playerName, setPlayerName] = useState('');
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [showAwakening, setShowAwakening] = useState(false);
+  const [fuel, setFuel] = useState('');
+  const [fear, setFear] = useState('');
 
   const steps = [
     'intro',
     'name',
     'track',
     'explain',
+    'vision',
     'awakening'
   ];
 
@@ -983,7 +1000,11 @@ const Onboarding = ({ onComplete }) => {
       rewards: (track.rewards || []).map(r => ({
         ...r,
         id: generateId()
-      }))
+      })),
+      vision: {
+        fuel: fuel.trim(),
+        fear: fear.trim()
+      }
     });
   };
 
@@ -1187,26 +1208,71 @@ const Onboarding = ({ onComplete }) => {
           </div>
         )}
 
-        {/* Step: Vision Setup */}
+        {/* Step: Vision Input */}
         {step === 4 && (
+          <div className="animate-fadeIn">
+            <div className="text-center mb-6">
+              <Crown className="mx-auto text-cyber-cyan mb-4" size={48} />
+              <h2 className="font-display text-2xl font-bold text-white mb-2">
+                THE FUEL
+              </h2>
+              <p className="text-gray-500">What drives you? Who do you want to become?</p>
+            </div>
+
+            <div className="bg-cyber-dark rounded-xl p-4 border border-cyber-cyan/30 mb-4">
+              <textarea
+                value={fuel}
+                onChange={(e) => setFuel(e.target.value)}
+                placeholder="Example: I want to become a disciplined person who achieves their goals, builds wealth, and inspires others..."
+                className="w-full bg-transparent text-white text-sm rounded-lg px-3 py-2 outline-none resize-none h-28 placeholder:text-gray-600"
+                maxLength={300}
+              />
+              <div className="flex justify-end">
+                <span className="text-gray-600 text-xs">{fuel.length}/300</span>
+              </div>
+            </div>
+
+            <div className="text-center mb-6">
+              <Skull className="mx-auto text-cyber-red mb-4" size={48} />
+              <h2 className="font-display text-2xl font-bold text-white mb-2">
+                THE FEAR
+              </h2>
+              <p className="text-gray-500">What happens if you fail? Your anti-vision.</p>
+            </div>
+
+            <div className="bg-cyber-dark rounded-xl p-4 border border-cyber-red/30">
+              <textarea
+                value={fear}
+                onChange={(e) => setFear(e.target.value)}
+                placeholder="Example: If I give up, I'll remain stuck, broke, unhealthy, and full of regret..."
+                className="w-full bg-transparent text-white text-sm rounded-lg px-3 py-2 outline-none resize-none h-28 placeholder:text-gray-600"
+                maxLength={300}
+              />
+              <div className="flex justify-end">
+                <span className="text-gray-600 text-xs">{fear.length}/300</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step: Ready to Awaken */}
+        {step === 5 && (
           <div className="animate-fadeIn text-center">
-            <Eye className="mx-auto text-cyber-purple mb-4" size={48} />
+            <Eye className="mx-auto text-cyber-purple mb-4 animate-pulse" size={64} />
             <h2 className="font-display text-2xl font-bold text-white mb-2">
-              YOUR AWAKENING
+              READY TO AWAKEN
             </h2>
             <p className="text-gray-500 mb-6">
-              Before we begin, you must understand your purpose.
+              Your purpose is set. Your path is clear.
             </p>
 
             <div className="bg-gradient-to-b from-cyber-purple/20 to-transparent rounded-xl p-6 border border-cyber-purple/30">
               <p className="text-gray-300 leading-relaxed">
-                THE SYSTEM amplifies <span className="text-cyber-cyan font-bold">intention</span>.
+                THE SYSTEM will now bind to your soul.
                 <br /><br />
-                You will define your <span className="text-cyber-cyan">vision</span> — who you want to become.
+                <span className="text-cyber-cyan font-bold">Discipline</span> becomes <span className="text-cyber-gold font-bold">Power</span>.
                 <br /><br />
-                And your <span className="text-cyber-red">anti-vision</span> — what happens if you fail.
-                <br /><br />
-                These will fuel your journey.
+                <span className="text-gray-500 text-sm">There is no turning back.</span>
               </p>
             </div>
           </div>
@@ -1360,32 +1426,24 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   );
 };
 
-// ==================== PLAYER DASHBOARD ====================
-const Dashboard = ({ state, onLoginReward, showNotification, triggerCelebration, soundEnabled, onToggleSound }) => {
-  const { player, quests } = state;
-  const level = calculateLevel(player.totalXp);
+// ==================== REFLECT PAGE ====================
+const Dashboard = ({ state, onLoginReward, showNotification, soundEnabled, onToggleSound }) => {
+  const { player, habits, habitLog, habitStreaks, questLog } = state;
+  const today = getToday();
+
+  // Rank & Level
+  const rank = getRank(player.totalXp);
+  const nextRank = getNextRank(player.totalXp);
   const xpProgress = calculateXpProgress(player.totalXp);
-  const rank = getRank(level);
-  const nextRank = getNextRank(level);
+  const level = rank.level;
 
-  // Sort quests by priority (S > A > B > C)
-  const rankOrder = { 'S': 0, 'A': 1, 'B': 2, 'C': 3 };
-  const activeQuests = quests
-    .filter(q => !q.completed && !q.failed)
-    .sort((a, b) => {
-      const rankA = rankOrder[a.rank] ?? 2;
-      const rankB = rankOrder[b.rank] ?? 2;
-      if (rankA !== rankB) return rankA - rankB;
-      return new Date(a.createdAt) - new Date(b.createdAt);
-    });
-
-  const topQuest = activeQuests[0];
-  const getQuestRankInfo = (rankId) => {
-    return QUEST_RANKS.find(r => r.id === rankId) || QUEST_RANKS[2];
-  };
+  // Power Level calculation
+  const totalStreakBonus = Object.values(habitStreaks).reduce((sum, s) => sum + s * 10, 0);
+  const powerLevel = player.totalXp + totalStreakBonus;
 
   const [showCheckinAnim, setShowCheckinAnim] = useState(false);
   const [showRanksModal, setShowRanksModal] = useState(false);
+  const [monthOffset, setMonthOffset] = useState(0); // 0 = current month, -1 = last month, etc.
 
   const handleCheckIn = () => {
     if (!player.checkedInToday) {
@@ -1395,7 +1453,111 @@ const Dashboard = ({ state, onLoginReward, showNotification, triggerCelebration,
     }
   };
 
-  const selectedTrack = TRACKS.find(t => t.id === player.track) || TRACKS[0];
+  // Helper to get dates for a week (using local date to avoid timezone issues)
+  const getWeekDates = (weekOffset = 0) => {
+    const dates = [];
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - dayOfWeek - (weekOffset * 7));
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
+      const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      dates.push(localDate);
+    }
+    return dates;
+  };
+
+  // Helper to get month dates (using local date to avoid timezone issues)
+  const getMonthDates = (monthOffset = 0) => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + monthOffset;
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const dates = [];
+
+    for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+      // Use local date formatting to avoid timezone shifts
+      const localDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      dates.push(localDate);
+    }
+    return dates;
+  };
+
+  // Current week stats
+  const currentWeekDates = getWeekDates(0);
+  const pastWeekDates = getWeekDates(1);
+
+  const calculateWeekStats = (dates) => {
+    let habitsCompleted = 0;
+    let questsCompleted = 0;
+    let questsFailed = 0;
+    let daysActive = 0;
+
+    dates.forEach(date => {
+      const dayHabits = habitLog[date]?.length || 0;
+      if (dayHabits > 0) daysActive++;
+      habitsCompleted += dayHabits;
+    });
+
+    // Quest log stats for the week
+    (questLog || []).forEach(q => {
+      const qDate = q.completedAt?.split('T')[0];
+      if (dates.includes(qDate)) {
+        if (q.completed) questsCompleted++;
+        else questsFailed++;
+      }
+    });
+
+    return { habitsCompleted, questsCompleted, questsFailed, daysActive };
+  };
+
+  const currentWeekStats = calculateWeekStats(currentWeekDates);
+  const pastWeekStats = calculateWeekStats(pastWeekDates);
+
+  // Monthly calendar data (uses monthOffset for navigation)
+  const currentMonthDates = getMonthDates(monthOffset);
+  const selectedMonthDate = new Date();
+  selectedMonthDate.setMonth(selectedMonthDate.getMonth() + monthOffset);
+  const monthName = selectedMonthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  // Calculate month stats
+  const monthHabitsCompleted = currentMonthDates.reduce((sum, date) => sum + (habitLog[date]?.length || 0), 0);
+  const monthQuestsCompleted = (questLog || []).filter(q => {
+    const qDate = q.completedAt?.split('T')[0];
+    return currentMonthDates.includes(qDate) && q.completed;
+  }).length;
+
+  // Actual active days (days with at least one habit or quest activity)
+  const activeDays = (() => {
+    const activeDates = new Set();
+
+    // Add dates from habit log
+    Object.keys(habitLog).forEach(date => {
+      if (habitLog[date]?.length > 0) {
+        activeDates.add(date);
+      }
+    });
+
+    // Add dates from quest log
+    (questLog || []).forEach(q => {
+      if (q.completedAt) {
+        const qDate = q.completedAt.split('T')[0];
+        activeDates.add(qDate);
+      }
+    });
+
+    return activeDates.size;
+  })();
+
+  // Get day labels
+  const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+  // Get first day of month offset (for the selected month)
+  const firstDayOffset = currentMonthDates.length > 0 ? new Date(currentMonthDates[0]).getDay() : 0;
 
   return (
     <div className="h-full overflow-y-auto pb-4 px-4">
@@ -1403,75 +1565,46 @@ const Dashboard = ({ state, onLoginReward, showNotification, triggerCelebration,
       {showCheckinAnim && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-fadeIn">
           <div className="text-center">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-cyber-cyan/20 flex items-center justify-center animate-checkPop">
-              <Calendar className="text-cyber-cyan" size={40} />
+            <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-cyber-cyan/20 flex items-center justify-center animate-checkPop">
+              <Calendar className="text-cyber-cyan" size={32} />
             </div>
-            <p className="text-cyber-cyan font-display text-2xl font-bold">+{DAILY_LOGIN_XP} XP</p>
-            <p className="text-gray-400">Daily Bonus!</p>
+            <p className="text-cyber-cyan font-display text-xl font-bold">+{DAILY_LOGIN_XP} XP</p>
+            <p className="text-gray-400 text-sm">Daily Bonus!</p>
           </div>
           <Particles type="xp" />
         </div>
       )}
 
-      {/* Header */}
-      <div className="relative py-6">
-        {/* Sound Toggle */}
-        <button
-          onClick={onToggleSound}
-          className="absolute top-6 right-0 p-2 rounded-lg bg-cyber-gray/50 text-gray-400 hover:text-cyber-cyan transition-colors btn-press"
-        >
-          {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-        </button>
-
-        <div className="text-center">
-          <h1 className="font-display text-3xl font-black gradient-text tracking-wider mb-1">
-            THE SYSTEM
-          </h1>
-          <p className="text-gray-500 text-xs tracking-widest">ARISE, {player.name?.toUpperCase()}</p>
-          <p className="text-xs mt-1" style={{ color: selectedTrack.color }}>
-            {selectedTrack.name} Track
-          </p>
-        </div>
-      </div>
-
       {/* Ranks Modal */}
       {showRanksModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 animate-fadeIn" onClick={() => setShowRanksModal(false)}>
           <div className="w-full max-w-sm bg-cyber-dark border border-cyber-cyan/30 rounded-xl p-4 animate-modalPop" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <h3 className="font-display font-bold text-cyber-cyan flex items-center gap-2">
-                <Crown size={18} /> Hunter Ranks
+                <Crown size={16} /> Hunter Ranks
               </h3>
               <button onClick={() => setShowRanksModal(false)} className="text-gray-500 hover:text-white p-1">
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
             <div className="space-y-2">
-              {RANKS.map((r, i) => {
+              {RANKS.map((r) => {
                 const isCurrentRank = r.name === rank.name;
-                const isUnlocked = level >= r.minLevel;
+                const isUnlocked = player.totalXp >= r.minXp;
                 return (
                   <div
                     key={r.name}
                     className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
                       isCurrentRank ? 'bg-cyber-cyan/10 border border-cyber-cyan/30' : 'bg-cyber-gray/30'
-                    } ${!isUnlocked ? 'opacity-50' : ''}`}
+                    } ${!isUnlocked ? 'opacity-40 grayscale' : ''}`}
                   >
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                      style={{ backgroundColor: `${r.color}20`, color: r.color }}
-                    >
-                      {r.minLevel}
-                    </div>
+                    <img src={r.icon} alt={r.name} className="w-8 h-8 object-contain" />
                     <div className="flex-1">
                       <p className="font-display font-bold text-sm" style={{ color: r.color }}>{r.name}</p>
-                      <p className="text-gray-500 text-xs">{r.title}</p>
+                      <p className="text-gray-500 text-[10px]">{r.minXp.toLocaleString()} XP</p>
                     </div>
                     {isCurrentRank && (
-                      <span className="text-cyber-cyan text-xs font-bold bg-cyber-cyan/20 px-2 py-0.5 rounded">YOU</span>
-                    )}
-                    {!isUnlocked && (
-                      <span className="text-gray-600 text-xs">Lv.{r.minLevel}</span>
+                      <span className="text-cyber-cyan text-[10px] font-bold bg-cyber-cyan/20 px-2 py-0.5 rounded">YOU</span>
                     )}
                   </div>
                 );
@@ -1481,179 +1614,306 @@ const Dashboard = ({ state, onLoginReward, showNotification, triggerCelebration,
         </div>
       )}
 
-      {/* Player Card - Compact */}
-      <div className="bg-cyber-dark rounded-xl p-4 glow-border-cyan mb-4 relative overflow-hidden">
-        {/* Track indicator */}
-        <div
-          className="absolute top-0 right-0 w-16 h-16 opacity-10"
-          style={{
-            background: `radial-gradient(circle at top right, ${selectedTrack.color}, transparent 70%)`
-          }}
-        />
+      {/* Header */}
+      <div className="flex items-center justify-between py-4">
+        <div>
+          <p className="text-gray-500 text-[10px] tracking-widest">HUNTER {player.name?.toUpperCase()}</p>
+          <h1 className="font-display text-xl font-black text-white flex items-center gap-2">
+            <Eye className="text-cyber-cyan" size={20} /> Reflect
+          </h1>
+        </div>
+        <button
+          onClick={onToggleSound}
+          className="p-2 rounded-lg bg-cyber-gray/50 text-gray-400 hover:text-cyber-cyan transition-colors btn-press"
+        >
+          {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+        </button>
+      </div>
 
-        {/* Rank & Level Row - Compact */}
-        <div className="flex items-center gap-3 mb-3">
-          {/* Clickable Rank Badge */}
+      {/* Daily Check-in Button */}
+      {!player.checkedInToday && (
+        <button
+          onClick={handleCheckIn}
+          className="w-full mb-3 py-3 px-4 rounded-xl font-display font-bold text-sm flex items-center justify-center gap-2 transition-all btn-press relative overflow-hidden bg-gradient-to-r from-cyber-cyan/20 to-cyber-green/20 text-cyber-cyan border border-cyber-cyan/50 hover:border-cyber-cyan hover:shadow-[0_0_20px_rgba(0,255,255,0.3)]"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
+          <Calendar size={18} />
+          <span>Daily Check-in</span>
+          <span className="text-cyber-green font-bold">+{DAILY_LOGIN_XP} XP</span>
+        </button>
+      )}
+
+      {/* Current Status Card */}
+      <div className="bg-cyber-dark rounded-xl p-4 glow-border-cyan mb-3">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-gray-500 text-[10px] uppercase tracking-wider">Power Level</p>
+            <p className="font-display text-3xl font-black text-white">{powerLevel.toLocaleString()}</p>
+          </div>
           <button
-            onClick={() => {
-              soundManager.click();
-              setShowRanksModal(true);
-            }}
-            className="flex items-center gap-2 bg-cyber-gray/50 rounded-lg px-3 py-2 hover:bg-cyber-gray/70 transition-all btn-press"
+            onClick={() => { soundManager.click(); setShowRanksModal(true); }}
+            className="flex flex-col items-center gap-1 bg-cyber-gray/50 rounded-xl px-3 py-2 hover:bg-cyber-gray/70 transition-all btn-press"
           >
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: `${rank.color}20` }}
-            >
-              <Crown size={16} style={{ color: rank.color }} />
-            </div>
-            <div className="text-left">
-              <p className="font-display font-bold text-sm" style={{ color: rank.color }}>{rank.name}</p>
-              <p className="text-gray-500 text-[10px]">{rank.title}</p>
-            </div>
-            <ChevronRight size={14} className="text-gray-500 ml-1" />
+            <img src={rank.icon} alt={rank.name} className="w-12 h-12 object-contain" />
+            <p className="font-display font-bold text-[10px]" style={{ color: rank.color }}>{rank.name}</p>
           </button>
-
-          {/* Level */}
-          <div className="flex-1 text-right">
-            <p className="text-gray-500 text-[10px] uppercase tracking-wider">Level</p>
-            <p className="font-display text-3xl font-black text-white leading-none">{level}</p>
-          </div>
         </div>
 
-        {/* XP Bar */}
+        {/* XP Progress */}
         <div className="mb-3">
-          <div className="flex justify-between text-xs mb-1">
-            <span className="text-cyber-cyan flex items-center gap-1">
-              <Zap size={10} /> {xpProgress} / {XP_PER_LEVEL}
-            </span>
-            {nextRank && (
-              <span className="text-gray-500 text-[10px]">{nextRank.name} @ Lv.{nextRank.minLevel}</span>
-            )}
+          <div className="flex justify-between text-[10px] mb-1">
+            <span className="text-cyber-cyan">{xpProgress.current.toLocaleString()} / {xpProgress.total.toLocaleString()} XP</span>
+            {nextRank && <span className="text-gray-500">Next: {nextRank.name}</span>}
           </div>
-          <div className="h-2 bg-cyber-gray rounded-full overflow-hidden relative">
-            <div
-              className="h-full progress-bar-xp transition-all duration-500 rounded-full relative"
-              style={{ width: `${(xpProgress / XP_PER_LEVEL) * 100}%` }}
-            >
-              <div className="absolute inset-0 animate-shimmer" />
-            </div>
+          <div className="h-2 bg-cyber-gray rounded-full overflow-hidden">
+            <div className="h-full progress-bar-xp rounded-full transition-all" style={{ width: `${xpProgress.percent}%` }} />
           </div>
         </div>
 
-        {/* Stats Row - Compact */}
-        <div className="flex gap-2">
-          <div className="flex-1 bg-cyber-gray/50 rounded-lg px-3 py-2 flex items-center justify-center gap-2">
-            <Coins size={14} className="text-cyber-gold" />
-            <span className="font-display font-bold text-cyber-gold">{player.gold}</span>
+        {/* Stats Row */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-cyber-gray/30 rounded-lg p-2 text-center">
+            <Coins size={14} className="text-cyber-gold mx-auto mb-1" />
+            <p className="font-display font-bold text-sm text-cyber-gold">{player.gold}</p>
+            <p className="text-gray-500 text-[8px]">GOLD</p>
           </div>
-          <div className="flex-1 bg-cyber-gray/50 rounded-lg px-3 py-2 flex items-center justify-center gap-2">
-            <Heart size={14} className={`text-cyber-red ${player.health < 30 ? 'animate-heartbeat' : ''}`} />
-            <span className="font-display font-bold text-cyber-red">{player.health}%</span>
+          <div className="bg-cyber-gray/30 rounded-lg p-2 text-center">
+            <Trophy size={14} className="text-cyber-purple mx-auto mb-1" />
+            <p className="font-display font-bold text-sm text-cyber-purple">{player.totalQuestsCompleted}</p>
+            <p className="text-gray-500 text-[8px]">QUESTS</p>
+          </div>
+          <div className="bg-cyber-gray/30 rounded-lg p-2 text-center">
+            <Calendar size={14} className="text-cyber-green mx-auto mb-1" />
+            <p className="font-display font-bold text-sm text-cyber-green">{activeDays}</p>
+            <p className="text-gray-500 text-[8px]">ACTIVE</p>
           </div>
         </div>
       </div>
 
-      {/* Daily Check-in */}
-      <button
-        onClick={handleCheckIn}
-        disabled={player.checkedInToday}
-        className={`w-full py-4 rounded-xl font-bold mb-4 transition-all btn-press relative overflow-hidden ${
-          player.checkedInToday
-            ? 'bg-cyber-gray text-gray-500 cursor-not-allowed'
-            : 'bg-gradient-to-r from-cyber-cyan to-cyber-green text-black'
-        }`}
-      >
-        {!player.checkedInToday && (
-          <div className="absolute inset-0 animate-shimmer" />
-        )}
-        {player.checkedInToday ? (
-          <span className="flex items-center justify-center gap-2 relative z-10">
-            <Check size={20} /> CHECKED IN TODAY
-          </span>
-        ) : (
-          <span className="flex items-center justify-center gap-2 relative z-10">
-            <Calendar size={20} /> DAILY CHECK-IN (+{DAILY_LOGIN_XP} XP)
-          </span>
-        )}
-      </button>
+      {/* Weekly Comparison */}
+      <div className="bg-cyber-dark rounded-xl p-3 mb-3 border border-cyber-cyan/20">
+        <h3 className="font-display font-bold text-cyber-cyan flex items-center gap-2 text-sm mb-3">
+          <Zap size={14} /> Weekly Progress
+        </h3>
 
-      {/* Top Priority Quest */}
-      {topQuest ? (
-        <div
-          className="bg-cyber-dark rounded-xl p-4 mb-4 relative overflow-hidden"
-          style={{
-            borderLeft: `3px solid ${getQuestRankInfo(topQuest.rank).color}`,
-            boxShadow: topQuest.rank === 'S' ? `0 0 20px ${getQuestRankInfo(topQuest.rank).color}30` : undefined
-          }}
-        >
-          {topQuest.rank === 'S' && (
-            <div
-              className="absolute inset-0 opacity-10 animate-pulse"
-              style={{ background: `linear-gradient(90deg, ${getQuestRankInfo(topQuest.rank).color}20, transparent)` }}
-            />
-          )}
-
-          <div className="flex items-center gap-3 relative z-10">
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: getQuestRankInfo(topQuest.rank).bgColor }}
-            >
-              <span className="font-display font-black text-xl" style={{ color: getQuestRankInfo(topQuest.rank).color }}>
-                {topQuest.rank || 'B'}
-              </span>
+        <div className="bg-cyber-gray/30 rounded-lg overflow-hidden">
+          {/* Column Headers */}
+          <div className="grid grid-cols-2 border-b border-gray-700/50">
+            <div className="p-2 text-center border-r border-gray-700/50">
+              <p className="text-cyber-cyan text-[10px] uppercase tracking-wider font-bold">This Week</p>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-gray-400 text-xs uppercase tracking-wider">Top Priority</p>
-              <p className="font-display font-bold text-white truncate">{topQuest.name}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-cyber-cyan text-xs flex items-center gap-1">
-                  <Zap size={10} /> {topQuest.reward} XP
-                </span>
-                <span className="text-cyber-gold text-xs flex items-center gap-1">
-                  <Coins size={10} /> {topQuest.goldReward}
-                </span>
+            <div className="p-2 text-center">
+              <p className="text-gray-400 text-[10px] uppercase tracking-wider font-bold">Last Week</p>
+            </div>
+          </div>
+
+          {/* Stats Rows */}
+          <div className="grid grid-cols-2">
+            {/* This Week */}
+            <div className="p-3 border-r border-gray-700/50">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500 text-xs">Habits</span>
+                  <span className="text-cyber-cyan font-bold text-sm">{currentWeekStats.habitsCompleted}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500 text-xs">Quests</span>
+                  <span className="text-cyber-green font-bold text-sm">{currentWeekStats.questsCompleted}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500 text-xs">Active Days</span>
+                  <span className="text-white font-bold text-sm">{currentWeekStats.daysActive}/7</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Last Week */}
+            <div className="p-3">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500 text-xs">Habits</span>
+                  <span className="text-gray-400 font-bold text-sm">{pastWeekStats.habitsCompleted}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500 text-xs">Quests</span>
+                  <span className="text-gray-400 font-bold text-sm">{pastWeekStats.questsCompleted}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500 text-xs">Active Days</span>
+                  <span className="text-gray-400 font-bold text-sm">{pastWeekStats.daysActive}/7</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      ) : (
-        <div className="bg-cyber-dark rounded-xl p-4 mb-4 border border-dashed border-gray-700 text-center">
-          <p className="text-gray-500 text-sm">No active quests</p>
-          <p className="text-gray-600 text-xs">Create a quest to get started!</p>
+
+        {/* Week Comparison Indicator */}
+        {pastWeekStats.habitsCompleted > 0 && (
+          <div className="mt-3 pt-3 border-t border-gray-700/50">
+            <div className="flex items-center justify-center gap-2">
+              {currentWeekStats.habitsCompleted >= pastWeekStats.habitsCompleted ? (
+                <>
+                  <ChevronUp className="text-cyber-green" size={16} />
+                  <span className="text-cyber-green text-xs font-bold">
+                    {currentWeekStats.habitsCompleted > pastWeekStats.habitsCompleted
+                      ? `+${currentWeekStats.habitsCompleted - pastWeekStats.habitsCompleted} habits vs last week`
+                      : 'Same as last week'}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="text-cyber-red" size={16} />
+                  <span className="text-cyber-red text-xs font-bold">
+                    {pastWeekStats.habitsCompleted - currentWeekStats.habitsCompleted} fewer habits vs last week
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Monthly Calendar */}
+      <div className="bg-cyber-dark rounded-xl p-3 mb-3 border border-cyber-purple/20">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-display font-bold text-cyber-purple flex items-center gap-2 text-sm">
+            <Calendar size={14} /> {monthName}
+          </h3>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => {
+                soundManager.click();
+                setMonthOffset(prev => prev - 1);
+              }}
+              className="p-1.5 rounded-lg bg-cyber-gray/50 text-gray-400 hover:text-cyber-purple hover:bg-cyber-purple/20 transition-all btn-press"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              onClick={() => {
+                soundManager.click();
+                setMonthOffset(0);
+              }}
+              disabled={monthOffset === 0}
+              className={`px-2 py-1 rounded-lg text-xs font-bold transition-all ${
+                monthOffset === 0
+                  ? 'bg-cyber-gray/30 text-gray-600 cursor-not-allowed'
+                  : 'bg-cyber-purple/20 text-cyber-purple hover:bg-cyber-purple/30 btn-press'
+              }`}
+            >
+              Today
+            </button>
+            <button
+              onClick={() => {
+                soundManager.click();
+                setMonthOffset(prev => prev + 1);
+              }}
+              disabled={monthOffset >= 0}
+              className={`p-1.5 rounded-lg transition-all ${
+                monthOffset >= 0
+                  ? 'bg-cyber-gray/30 text-gray-600 cursor-not-allowed'
+                  : 'bg-cyber-gray/50 text-gray-400 hover:text-cyber-purple hover:bg-cyber-purple/20 btn-press'
+              }`}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Day Labels */}
+        <div className="grid grid-cols-7 gap-1 mb-1">
+          {dayLabels.map((day, i) => (
+            <div key={i} className="text-center text-gray-500 text-[10px]">{day}</div>
+          ))}
+        </div>
+
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {/* Empty cells for offset */}
+          {[...Array(firstDayOffset)].map((_, i) => (
+            <div key={`empty-${i}`} className="aspect-square" />
+          ))}
+
+          {/* Day cells */}
+          {currentMonthDates.map((date) => {
+            const dayNum = new Date(date).getDate();
+            const habitsCount = habitLog[date]?.length || 0;
+            const isToday = date === today && monthOffset === 0;
+            const intensity = Math.min(5, habitsCount);
+
+            return (
+              <div
+                key={date}
+                className={`aspect-square rounded-sm flex items-center justify-center text-[10px] relative ${
+                  isToday ? 'ring-1 ring-cyber-cyan' : ''
+                } heatmap-${intensity}`}
+                title={`${date}: ${habitsCount} habits`}
+              >
+                <span className={habitsCount > 0 ? 'text-white' : 'text-gray-600'}>{dayNum}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Month Summary */}
+        <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-700/50">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <Flame size={12} className="text-orange-500" />
+              <span className="text-xs text-gray-400">{monthHabitsCompleted} habits</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Swords size={12} className="text-cyber-cyan" />
+              <span className="text-xs text-gray-400">{monthQuestsCompleted} quests</span>
+            </div>
+          </div>
+          {/* Legend */}
+          <div className="flex items-center gap-1">
+            <span className="text-gray-600 text-[8px]">Less</span>
+            {[0, 2, 4, 5].map(i => (
+              <div key={i} className={`w-2 h-2 rounded-sm heatmap-${i}`} />
+            ))}
+            <span className="text-gray-600 text-[8px]">More</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Best Streaks */}
+      {Object.keys(habitStreaks).length > 0 && (
+        <div className="bg-cyber-dark rounded-xl p-3 mb-3 border border-orange-500/20">
+          <h3 className="font-display font-bold text-orange-400 flex items-center gap-2 text-xs mb-2">
+            <Flame size={12} /> Best Streaks
+          </h3>
+          <div className="space-y-2">
+            {Object.entries(habitStreaks)
+              .filter(([_, streak]) => streak > 0)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 5)
+              .map(([habitId, streak]) => {
+                const habit = habits.find(h => h.id === habitId);
+                if (!habit) return null;
+                return (
+                  <div key={habitId} className="flex items-center justify-between bg-cyber-gray/30 rounded-lg px-3 py-2">
+                    <span className="text-gray-300 text-xs truncate flex-1">{habit.name}</span>
+                    <div className="flex items-center gap-1 text-orange-400">
+                      <Flame size={12} />
+                      <span className="font-bold text-sm">{streak}</span>
+                      <span className="text-gray-500 text-[10px]">days</span>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
         </div>
       )}
 
-      {/* Active Quests Summary */}
-      <div className="bg-cyber-dark rounded-xl p-4 glow-border-cyan">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-display font-bold text-cyber-cyan flex items-center gap-2">
-            <Swords size={18} /> Active Quests
-          </h3>
-          <span className="bg-cyber-cyan/20 text-cyber-cyan px-2 py-1 rounded text-xs font-bold">
-            {activeQuests.length}
-          </span>
+      {/* Vision Reminder */}
+      {state.vision.fuel && (
+        <div className="bg-gradient-to-r from-cyber-purple/10 to-transparent rounded-xl p-3 border-l-2 border-cyber-purple">
+          <p className="text-[10px] text-cyber-purple uppercase tracking-wider mb-1">Why We Do This</p>
+          <p className="text-gray-300 text-xs line-clamp-2">{state.vision.fuel}</p>
         </div>
-        {activeQuests.length === 0 ? (
-          <p className="text-gray-500 text-sm text-center py-4">No active quests. Create one!</p>
-        ) : (
-          <div className="space-y-2">
-            {activeQuests.slice(0, 3).map((quest, i) => (
-              <div
-                key={quest.id}
-                className="flex items-center justify-between py-2 border-b border-cyber-gray/50 last:border-0 animate-slideRight"
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <span className="text-gray-300 text-sm truncate flex-1 mr-2">{quest.name}</span>
-                <span className="text-cyber-gold text-xs font-bold">+{quest.reward} XP</span>
-              </div>
-            ))}
-            {activeQuests.length > 3 && (
-              <p className="text-gray-500 text-xs text-center">+{activeQuests.length - 3} more quests</p>
-            )}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 };
@@ -2196,7 +2456,7 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
   );
 };
 
-// ==================== AWAKENING (VISION) ====================
+// ==================== SETTINGS ====================
 const FALLBACK_QUOTES = [
   { q: "The gap between who you are and who you want to be is what you do.", a: "Unknown" },
   { q: "Discipline is choosing between what you want now and what you want most.", a: "Abraham Lincoln" },
@@ -2205,48 +2465,47 @@ const FALLBACK_QUOTES = [
   { q: "Your limitation—it's only your imagination.", a: "Unknown" }
 ];
 
-const Awakening = ({ state, onUpdateVision, onResetSystem, showNotification }) => {
+// Tab info for reordering UI
+const TAB_INFO = {
+  home: { label: 'Reflect', icon: Eye },
+  habits: { label: 'Habits', icon: Flame },
+  quests: { label: 'Quests', icon: Swords },
+  shop: { label: 'Shop', icon: ShoppingBag },
+  awakening: { label: 'Settings', icon: Shield }
+};
+
+const Settings = ({ state, onUpdateVision, onResetSystem, onImportData, showNotification, tabOrder, onUpdateTabOrder }) => {
   const [editing, setEditing] = useState(null);
   const [tempVision, setTempVision] = useState(state.vision);
   const [resetConfirm, setResetConfirm] = useState('');
   const [showResetWarning, setShowResetWarning] = useState(false);
-  const [dailyQuote, setDailyQuote] = useState({ q: '', a: '' });
+  const [showTabOrderModal, setShowTabOrderModal] = useState(false);
+  const [tempTabOrder, setTempTabOrder] = useState(tabOrder || ['home', 'habits', 'quests', 'shop', 'awakening']);
+  const fileInputRef = useRef(null);
 
-  // Fetch daily quote - only once per day
-  useEffect(() => {
-    const today = getToday();
-    const cached = localStorage.getItem('dailyQuote');
+  // Daily quote - pick one based on the day
+  const todayQuote = FALLBACK_QUOTES[new Date().getDate() % FALLBACK_QUOTES.length];
 
-    if (cached) {
-      const { date, quote } = JSON.parse(cached);
-      if (date === today) {
-        setDailyQuote(quote);
-        return;
-      }
-    }
+  const moveTab = (index, direction) => {
+    const newOrder = [...tempTabOrder];
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= newOrder.length) return;
+    [newOrder[index], newOrder[newIndex]] = [newOrder[newIndex], newOrder[index]];
+    setTempTabOrder(newOrder);
+    soundManager.click();
+  };
 
-    // Fetch new quote from quotable.io (CORS-friendly)
-    fetch('https://api.quotable.io/random?tags=motivational|inspirational|success')
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.content) {
-          const quote = { q: data.content, a: data.author };
-          setDailyQuote(quote);
-          localStorage.setItem('dailyQuote', JSON.stringify({ date: today, quote }));
-        }
-      })
-      .catch(() => {
-        // Use fallback quote on error
-        const fallback = FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
-        setDailyQuote(fallback);
-        localStorage.setItem('dailyQuote', JSON.stringify({ date: today, quote: fallback }));
-      });
-  }, []);
+  const saveTabOrder = () => {
+    onUpdateTabOrder(tempTabOrder);
+    setShowTabOrderModal(false);
+    showNotification('Tab order saved!', 'success');
+  };
 
   const handleSave = (type) => {
     onUpdateVision({ ...state.vision, [type]: tempVision[type] });
     setEditing(null);
-    showNotification('Vision Saved!', 'success');
+    soundManager.success();
+    showNotification('Saved!', 'success');
   };
 
   const handleReset = () => {
@@ -2259,193 +2518,438 @@ const Awakening = ({ state, onUpdateVision, onResetSystem, showNotification }) =
     }
   };
 
+  const handleExport = () => {
+    soundManager.click();
+    try {
+      // Create export object with all app data
+      const exportData = {
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        appName: 'THE SYSTEM',
+        data: {
+          ...state,
+          settings: {
+            tabOrder: tabOrder,
+            soundEnabled: localStorage.getItem('theSystemSound') !== 'false'
+          }
+        }
+      };
+
+      // Create blob and download
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `the-system-backup-${getToday()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      soundManager.success();
+      showNotification('Data exported successfully!', 'success');
+    } catch (error) {
+      console.error('Export failed:', error);
+      soundManager.error();
+      showNotification('Export failed!', 'error');
+    }
+  };
+
+  const handleImport = () => {
+    soundManager.click();
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target.result);
+
+        // Validate the imported data
+        if (!importedData.appName || importedData.appName !== 'THE SYSTEM') {
+          throw new Error('Invalid backup file');
+        }
+
+        if (!importedData.data) {
+          throw new Error('No data found in backup');
+        }
+
+        // Extract settings if present
+        const settings = importedData.data.settings;
+        if (settings?.tabOrder) {
+          onUpdateTabOrder(settings.tabOrder);
+        }
+        if (settings?.soundEnabled !== undefined) {
+          localStorage.setItem('theSystemSound', settings.soundEnabled.toString());
+        }
+
+        // Remove settings from data before importing state
+        const { settings: _, ...stateData } = importedData.data;
+
+        // Import the state data
+        onImportData(stateData);
+
+        soundManager.success();
+        showNotification('Data imported successfully!', 'success');
+      } catch (error) {
+        console.error('Import failed:', error);
+        soundManager.error();
+        showNotification('Invalid backup file!', 'error');
+      }
+    };
+
+    reader.onerror = () => {
+      soundManager.error();
+      showNotification('Failed to read file!', 'error');
+    };
+
+    reader.readAsText(file);
+    // Reset file input
+    event.target.value = '';
+  };
+
   return (
     <div className="h-full overflow-y-auto pb-4 px-4">
+      {/* Hidden file input for import */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileSelect}
+        accept=".json"
+        className="hidden"
+      />
+
       {/* Header */}
-      <div className="text-center py-6">
-        <h2 className="font-display text-2xl font-bold text-white flex items-center justify-center gap-2 mb-1">
-          <Eye className="text-cyber-purple animate-pulse" /> AWAKENING
+      <div className="py-4">
+        <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
+          <Shield className="text-cyber-cyan" /> Settings
         </h2>
-        <p className="text-gray-500 text-sm">Remember why you fight.</p>
       </div>
 
-      {/* The Fuel - Vision */}
-      <div className="bg-cyber-dark rounded-xl p-5 glow-border-cyan mb-4 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyber-cyan to-cyber-green" />
+      {/* Daily Reminder Quote */}
+      <div className="bg-cyber-dark rounded-xl p-3 mb-4 border-l-2 border-cyber-purple">
+        <p className="text-gray-300 text-sm italic leading-relaxed">"{todayQuote.q}"</p>
+        <p className="text-cyber-purple text-xs mt-2 text-right">— {todayQuote.a}</p>
+      </div>
 
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-cyber-cyan/20 flex items-center justify-center">
-              <Crown className="text-cyber-cyan" size={20} />
-            </div>
-            <div>
-              <h3 className="font-display font-bold text-cyber-cyan">THE FUEL</h3>
-              <p className="text-gray-500 text-xs">Who I want to become</p>
-            </div>
-          </div>
+      {/* Vision Section */}
+      <div className="mb-4">
+        <p className="text-gray-500 text-xs uppercase tracking-wider mb-2 px-1">Your Why</p>
+
+        {/* The Fuel - Compact Line Item */}
+        <div className="bg-cyber-dark rounded-lg mb-2 overflow-hidden">
           {editing === 'fuel' ? (
-            <button
-              onClick={() => handleSave('fuel')}
-              className="text-cyber-green p-2 hover:bg-cyber-green/20 rounded-lg transition-all"
-            >
-              <Save size={20} />
-            </button>
+            <div className="p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-cyber-cyan text-xs font-bold flex items-center gap-1">
+                  <Crown size={12} /> THE FUEL
+                </span>
+                <button
+                  onClick={() => handleSave('fuel')}
+                  className="text-cyber-green text-xs font-bold flex items-center gap-1 px-2 py-1 bg-cyber-green/20 rounded"
+                >
+                  <Save size={12} /> Save
+                </button>
+              </div>
+              <textarea
+                value={tempVision.fuel}
+                onChange={e => setTempVision({ ...tempVision, fuel: e.target.value })}
+                className="w-full bg-cyber-gray text-white text-sm rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-cyber-cyan resize-none h-20"
+                placeholder="Who do you want to become?"
+                autoFocus
+              />
+            </div>
           ) : (
             <button
               onClick={() => {
+                soundManager.click();
                 setEditing('fuel');
                 setTempVision({ ...state.vision });
               }}
-              className="text-gray-400 p-2 hover:bg-gray-800 rounded-lg transition-all"
+              className="w-full flex items-center justify-between p-3 hover:bg-cyber-gray/30 transition-all"
             >
-              <Edit3 size={20} />
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-cyber-cyan/20 flex items-center justify-center">
+                  <Crown size={16} className="text-cyber-cyan" />
+                </div>
+                <div className="text-left">
+                  <p className="text-white text-sm font-medium">The Fuel</p>
+                  <p className="text-gray-500 text-xs truncate max-w-[200px]">
+                    {state.vision.fuel || 'Define your vision...'}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-gray-500" />
             </button>
           )}
         </div>
-        {editing === 'fuel' ? (
-          <textarea
-            value={tempVision.fuel}
-            onChange={e => setTempVision({ ...tempVision, fuel: e.target.value })}
-            className="w-full bg-cyber-gray text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-cyber-cyan resize-none h-32 transition-all"
-            placeholder="Describe your ideal self... What does your future look like? What kind of person are you becoming?"
-            autoFocus
-          />
-        ) : (
-          <div className="bg-cyber-gray/50 rounded-lg p-4 min-h-[100px]">
-            {state.vision.fuel ? (
-              <p className="text-gray-300 whitespace-pre-wrap">{state.vision.fuel}</p>
-            ) : (
-              <p className="text-gray-600 italic">Tap edit to define your vision...</p>
-            )}
-          </div>
-        )}
-      </div>
 
-      {/* The Fear - Anti-Vision */}
-      <div className="bg-cyber-dark rounded-xl p-5 glow-border-red mb-4 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyber-red to-orange-500" />
-
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-cyber-red/20 flex items-center justify-center">
-              <Skull className="text-cyber-red" size={20} />
-            </div>
-            <div>
-              <h3 className="font-display font-bold text-cyber-red">THE FEAR</h3>
-              <p className="text-gray-500 text-xs">What happens if I fail</p>
-            </div>
-          </div>
+        {/* The Fear - Compact Line Item */}
+        <div className="bg-cyber-dark rounded-lg overflow-hidden">
           {editing === 'fear' ? (
-            <button
-              onClick={() => handleSave('fear')}
-              className="text-cyber-green p-2 hover:bg-cyber-green/20 rounded-lg transition-all"
-            >
-              <Save size={20} />
-            </button>
+            <div className="p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-cyber-red text-xs font-bold flex items-center gap-1">
+                  <Skull size={12} /> THE FEAR
+                </span>
+                <button
+                  onClick={() => handleSave('fear')}
+                  className="text-cyber-green text-xs font-bold flex items-center gap-1 px-2 py-1 bg-cyber-green/20 rounded"
+                >
+                  <Save size={12} /> Save
+                </button>
+              </div>
+              <textarea
+                value={tempVision.fear}
+                onChange={e => setTempVision({ ...tempVision, fear: e.target.value })}
+                className="w-full bg-cyber-gray text-white text-sm rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-cyber-red resize-none h-20"
+                placeholder="What happens if you fail?"
+                autoFocus
+              />
+            </div>
           ) : (
             <button
               onClick={() => {
+                soundManager.click();
                 setEditing('fear');
                 setTempVision({ ...state.vision });
               }}
-              className="text-gray-400 p-2 hover:bg-gray-800 rounded-lg transition-all"
+              className="w-full flex items-center justify-between p-3 hover:bg-cyber-gray/30 transition-all"
             >
-              <Edit3 size={20} />
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-cyber-red/20 flex items-center justify-center">
+                  <Skull size={16} className="text-cyber-red" />
+                </div>
+                <div className="text-left">
+                  <p className="text-white text-sm font-medium">The Fear</p>
+                  <p className="text-gray-500 text-xs truncate max-w-[200px]">
+                    {state.vision.fear || 'Define your anti-vision...'}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-gray-500" />
             </button>
           )}
         </div>
-        {editing === 'fear' ? (
-          <textarea
-            value={tempVision.fear}
-            onChange={e => setTempVision({ ...tempVision, fear: e.target.value })}
-            className="w-full bg-cyber-gray text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-cyber-red resize-none h-32 transition-all"
-            placeholder="What does your life look like if you give up? What are the consequences of staying undisciplined?"
-            autoFocus
-          />
-        ) : (
-          <div className="bg-cyber-gray/50 rounded-lg p-4 min-h-[100px]">
-            {state.vision.fear ? (
-              <p className="text-gray-300 whitespace-pre-wrap">{state.vision.fear}</p>
-            ) : (
-              <p className="text-gray-600 italic">Tap edit to define your anti-vision...</p>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Motivational Quote */}
-      <div className="bg-gradient-to-r from-cyber-purple/20 to-cyber-cyan/20 rounded-xl p-5 border border-cyber-purple/30 mb-6">
-        {dailyQuote.q ? (
-          <>
-            <p className="text-center text-gray-300 italic">
-              "{dailyQuote.q}"
-            </p>
-            <p className="text-center text-gray-500 text-sm mt-2">— {dailyQuote.a}</p>
-          </>
-        ) : (
-          <div className="flex justify-center">
-            <div className="w-5 h-5 border-2 border-cyber-cyan/30 border-t-cyber-cyan rounded-full animate-spin" />
+      {/* Preferences Section */}
+      <div className="mb-4">
+        <p className="text-gray-500 text-xs uppercase tracking-wider mb-2 px-1">Preferences</p>
+
+        {/* Tab Order */}
+        <button
+          onClick={() => {
+            soundManager.click();
+            setTempTabOrder(tabOrder || ['home', 'habits', 'quests', 'shop', 'awakening']);
+            setShowTabOrderModal(true);
+          }}
+          className="w-full bg-cyber-dark rounded-lg flex items-center justify-between p-3 hover:bg-cyber-gray/30 transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-cyber-cyan/20 flex items-center justify-center">
+              <GripVertical size={16} className="text-cyber-cyan" />
+            </div>
+            <div className="text-left">
+              <p className="text-white text-sm font-medium">Tab Order</p>
+              <p className="text-gray-500 text-xs">Customize navigation order</p>
+            </div>
           </div>
-        )}
+          <ChevronRight size={16} className="text-gray-500" />
+        </button>
       </div>
 
-      {/* Danger Zone - Reset System */}
-      <div className="mt-auto">
+      {/* Data Management Section */}
+      <div className="mb-4">
+        <p className="text-gray-500 text-xs uppercase tracking-wider mb-2 px-1">Data</p>
+
+        {/* Export JSON */}
+        <button
+          onClick={handleExport}
+          className="w-full bg-cyber-dark rounded-lg flex items-center justify-between p-3 hover:bg-cyber-gray/30 transition-all mb-2"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-cyber-green/20 flex items-center justify-center">
+              <Download size={16} className="text-cyber-green" />
+            </div>
+            <div className="text-left">
+              <p className="text-white text-sm font-medium">Export Data</p>
+              <p className="text-gray-500 text-xs">Download your progress as JSON</p>
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-gray-500" />
+        </button>
+
+        {/* Import JSON */}
+        <button
+          onClick={handleImport}
+          className="w-full bg-cyber-dark rounded-lg flex items-center justify-between p-3 hover:bg-cyber-gray/30 transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-cyber-purple/20 flex items-center justify-center">
+              <Download size={16} className="text-cyber-purple rotate-180" />
+            </div>
+            <div className="text-left">
+              <p className="text-white text-sm font-medium">Import Data</p>
+              <p className="text-gray-500 text-xs">Restore from JSON backup</p>
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-gray-500" />
+        </button>
+      </div>
+
+      {/* Danger Zone */}
+      <div>
+        <p className="text-gray-500 text-xs uppercase tracking-wider mb-2 px-1">Danger Zone</p>
         <button
           onClick={() => {
             soundManager.click();
             setShowResetWarning(true);
           }}
-          className="w-full py-3 rounded-lg border border-gray-700 text-gray-500 text-sm hover:border-cyber-red/50 hover:text-gray-400 transition-all"
+          className="w-full bg-cyber-dark rounded-lg flex items-center justify-between p-3 hover:bg-cyber-red/10 transition-all border border-transparent hover:border-cyber-red/30"
         >
-          Reset System...
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-cyber-red/20 flex items-center justify-center">
+              <RefreshCw size={16} className="text-cyber-red" />
+            </div>
+            <div className="text-left">
+              <p className="text-cyber-red text-sm font-medium">Reset System</p>
+              <p className="text-gray-500 text-xs">Delete all progress permanently</p>
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-gray-500" />
         </button>
       </div>
 
-      {/* Reset Confirmation Modal */}
+      {/* Reset Confirmation Modal - Compact */}
       {showResetWarning && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 animate-fadeIn">
-          <div className="w-full max-w-sm bg-cyber-dark border-2 border-cyber-red/50 rounded-xl p-6 animate-modalPop">
-            <div className="flex items-center justify-center gap-2 text-cyber-red mb-4">
-              <AlertTriangle size={24} />
-              <h3 className="font-display font-bold text-xl">DANGER ZONE</h3>
+          <div className="w-full max-w-xs bg-cyber-dark border border-cyber-red/50 rounded-xl p-4 animate-modalPop">
+            <div className="flex items-center justify-center gap-2 text-cyber-red mb-2">
+              <AlertTriangle size={18} />
+              <h3 className="font-display font-bold text-sm">RESET SYSTEM?</h3>
             </div>
-            <p className="text-gray-400 text-sm text-center mb-4">
-              This will permanently delete ALL your progress, habits, quests, and rewards. This cannot be undone.
-            </p>
-            <p className="text-gray-500 text-xs text-center mb-3">
-              Type <span className="text-cyber-red font-bold">"I give up!"</span> to confirm:
+            <p className="text-gray-400 text-xs text-center mb-3">
+              All progress will be deleted permanently.
             </p>
             <input
               type="text"
               value={resetConfirm}
               onChange={(e) => setResetConfirm(e.target.value)}
-              placeholder="I give up!"
-              className="w-full bg-cyber-gray text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-cyber-red mb-4 text-center"
+              placeholder='Type "I give up!"'
+              className="w-full bg-cyber-gray text-white text-sm rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-cyber-red mb-3 text-center"
               autoFocus
             />
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 onClick={() => {
                   soundManager.click();
                   setShowResetWarning(false);
                   setResetConfirm('');
                 }}
-                className="flex-1 py-3 rounded-lg border border-gray-600 text-gray-400 font-medium hover:bg-gray-800 transition-all"
+                className="flex-1 py-2 rounded-lg border border-gray-600 text-gray-400 text-sm hover:bg-gray-800 transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleReset}
                 disabled={resetConfirm !== 'I give up!'}
-                className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
+                className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${
                   resetConfirm === 'I give up!'
-                    ? 'bg-cyber-red text-white hover:bg-red-600'
+                    ? 'bg-cyber-red text-white'
                     : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                <RefreshCw size={16} />
-                Reset All
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab Order Modal */}
+      {showTabOrderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 animate-fadeIn">
+          <div className="w-full max-w-xs bg-cyber-dark border border-cyber-cyan/30 rounded-xl p-4 animate-modalPop">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-display font-bold text-sm text-cyber-cyan flex items-center gap-2">
+                <GripVertical size={16} /> Tab Order
+              </h3>
+              <button
+                onClick={() => {
+                  soundManager.click();
+                  setShowTabOrderModal(false);
+                }}
+                className="text-gray-500 hover:text-white p-1"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <p className="text-gray-500 text-xs mb-3">Use arrows to reorder tabs</p>
+
+            <div className="space-y-2 mb-4">
+              {tempTabOrder.map((tabId, index) => {
+                const tabInfo = TAB_INFO[tabId];
+                const TabIcon = tabInfo?.icon || Home;
+                return (
+                  <div
+                    key={tabId}
+                    className="flex items-center gap-2 bg-cyber-gray/50 rounded-lg p-2"
+                  >
+                    <span className="text-gray-500 text-xs w-4">{index + 1}</span>
+                    <div className="w-7 h-7 rounded bg-cyber-cyan/20 flex items-center justify-center">
+                      <TabIcon size={14} className="text-cyber-cyan" />
+                    </div>
+                    <span className="text-white text-sm flex-1">{tabInfo?.label || tabId}</span>
+                    <div className="flex flex-col gap-0.5">
+                      <button
+                        onClick={() => moveTab(index, 'up')}
+                        disabled={index === 0}
+                        className={`p-1 rounded transition-all ${
+                          index === 0
+                            ? 'text-gray-700 cursor-not-allowed'
+                            : 'text-gray-400 hover:text-cyber-cyan hover:bg-cyber-cyan/10'
+                        }`}
+                      >
+                        <ChevronUp size={14} />
+                      </button>
+                      <button
+                        onClick={() => moveTab(index, 'down')}
+                        disabled={index === tempTabOrder.length - 1}
+                        className={`p-1 rounded transition-all ${
+                          index === tempTabOrder.length - 1
+                            ? 'text-gray-700 cursor-not-allowed'
+                            : 'text-gray-400 hover:text-cyber-cyan hover:bg-cyber-cyan/10'
+                        }`}
+                      >
+                        <ChevronDown size={14} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  soundManager.click();
+                  setShowTabOrderModal(false);
+                }}
+                className="flex-1 py-2 rounded-lg border border-gray-600 text-gray-400 text-sm hover:bg-gray-800 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveTabOrder}
+                className="flex-1 py-2 rounded-lg bg-cyber-cyan text-black text-sm font-bold btn-press hover:shadow-neon-cyan transition-all"
+              >
+                Save
               </button>
             </div>
           </div>
@@ -2456,9 +2960,23 @@ const Awakening = ({ state, onUpdateVision, onResetSystem, showNotification }) =
 };
 
 // ==================== HABITS & HEATMAP ====================
+// Available habit icons
+const HABIT_ICONS = [
+  { id: 'star', label: 'Star' },
+  { id: 'flame', label: 'Fire' },
+  { id: 'zap', label: 'Energy' },
+  { id: 'target', label: 'Target' },
+  { id: 'heart', label: 'Health' },
+  { id: 'eye', label: 'Focus' },
+  { id: 'shield', label: 'Shield' },
+  { id: 'scroll', label: 'Learn' },
+  { id: 'user', label: 'Social' }
+];
+
 const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotification }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newHabit, setNewHabit] = useState('');
+  const [newHabitIcon, setNewHabitIcon] = useState('star');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const today = getToday();
 
@@ -2467,10 +2985,12 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
     onAddHabit({
       id: generateId(),
       name: newHabit,
-      icon: 'star'
+      icon: newHabitIcon
     });
     setNewHabit('');
+    setNewHabitIcon('star');
     setShowAddModal(false);
+    soundManager.success();
     showNotification('Habit Added!', 'success');
   };
 
@@ -2506,7 +3026,8 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
       for (let day = 0; day < 7; day++) {
         const date = new Date(todayDate);
         date.setDate(date.getDate() - (week * 7 + (6 - day)));
-        const dateStr = date.toISOString().split('T')[0];
+        // Use local date format to match habitLog keys (same as getToday())
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         const completedCount = state.habitLog[dateStr]?.length || 0;
         weekData.push({
           date: dateStr,
@@ -2631,10 +3152,10 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
               }`}
               style={{ animationDelay: `${i * 0.05}s` }}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 <button
                   onClick={() => onToggleHabit(habit.id)}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all btn-press ${
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all btn-press flex-shrink-0 ${
                     completed
                       ? 'bg-cyber-cyan text-black scale-110'
                       : 'bg-cyber-gray text-gray-400 hover:bg-cyber-gray/80'
@@ -2646,7 +3167,7 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
                     getHabitIcon(habit.icon)
                   )}
                 </button>
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className={`font-medium transition-colors ${completed ? 'text-cyber-cyan' : 'text-white'}`}>
                     {habit.name}
                   </p>
@@ -2662,9 +3183,9 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {streak >= 3 && (
-                  <div className={`bg-orange-500/20 text-orange-400 px-2 py-1 rounded text-xs font-bold flex items-center gap-1 ${streak >= 7 ? 'animate-pulse' : ''}`}>
+                  <div className={`bg-orange-500/20 text-orange-400 px-2 py-1 rounded text-xs font-bold flex items-center gap-1 flex-shrink-0 ${streak >= 7 ? 'animate-pulse' : ''}`}>
                     <Flame size={12} /> {streak}x
                   </div>
                 )}
@@ -2721,11 +3242,41 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
               placeholder="e.g., Drink 8 glasses of water"
             />
           </div>
+
+          {/* Icon Selector */}
+          <div>
+            <label className="text-gray-400 text-xs uppercase tracking-wider block mb-2">Icon</label>
+            <div className="grid grid-cols-5 gap-2">
+              {HABIT_ICONS.map(icon => (
+                <button
+                  key={icon.id}
+                  onClick={() => {
+                    soundManager.click();
+                    setNewHabitIcon(icon.id);
+                  }}
+                  className={`p-3 rounded-lg flex flex-col items-center gap-1 transition-all btn-press ${
+                    newHabitIcon === icon.id
+                      ? 'bg-cyber-cyan/20 border-2 border-cyber-cyan'
+                      : 'bg-cyber-gray hover:bg-cyber-gray/80 border-2 border-transparent'
+                  }`}
+                >
+                  <span className={newHabitIcon === icon.id ? 'text-cyber-cyan' : 'text-gray-400'}>
+                    {getHabitIcon(icon.id)}
+                  </span>
+                  <span className={`text-[9px] ${newHabitIcon === icon.id ? 'text-cyber-cyan' : 'text-gray-500'}`}>
+                    {icon.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="flex gap-3">
             <button
               onClick={() => {
                 soundManager.click();
                 setShowAddModal(false);
+                setNewHabitIcon('star');
               }}
               className="flex-1 py-3 rounded-lg border border-gray-600 text-gray-400 font-medium hover:bg-gray-800 transition-all"
             >
@@ -3076,7 +3627,18 @@ const Shop = ({ state, onBuyReward, onAddReward, onDeleteReward, showNotificatio
 // ==================== MAIN APP ====================
 const App = () => {
   const [state, setState] = useState(getInitialState);
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTabOrder = localStorage.getItem('theSystemTabOrder');
+    if (savedTabOrder) {
+      try {
+        const parsed = JSON.parse(savedTabOrder);
+        return parsed[0] || 'home';
+      } catch (e) {
+        return 'home';
+      }
+    }
+    return 'home';
+  });
   const [notification, setNotification] = useState(null);
   const [celebration, setCelebration] = useState(null);
   const [floatingTexts, setFloatingTexts] = useState([]);
@@ -3090,8 +3652,8 @@ const App = () => {
   const [showInstallBanner, setShowInstallBanner] = useState(false);
   const [isPwaInstalled, setIsPwaInstalled] = useState(false);
 
-  const previousLevel = useRef(calculateLevel(state.player.totalXp));
-  const previousRank = useRef(getRank(calculateLevel(state.player.totalXp)));
+  const previousRank = useRef(getRank(state.player.totalXp));
+  const previousLevel = useRef(previousRank.current.level);
 
   // Update sound manager when sound enabled changes
   useEffect(() => {
@@ -3112,8 +3674,30 @@ const App = () => {
   const touchEnd = useRef({ x: 0, y: 0 });
   const minSwipeDistance = 50;
   const [swipeIndicator, setSwipeIndicator] = useState(null); // 'left' | 'right' | null
+  const [swipeProgress, setSwipeProgress] = useState(0); // -1 to 1, for gooey animation
+  const navRef = useRef(null);
 
-  const tabOrder = ['home', 'habits', 'quests', 'shop', 'awakening'];
+  // Customizable tab order
+  const defaultTabOrder = ['home', 'habits', 'quests', 'shop', 'awakening'];
+  const [customTabOrder, setCustomTabOrder] = useState(() => {
+    const saved = localStorage.getItem('theSystemTabOrder');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return defaultTabOrder;
+      }
+    }
+    return defaultTabOrder;
+  });
+
+  const tabOrder = customTabOrder;
+
+  const handleUpdateTabOrder = (newOrder) => {
+    setCustomTabOrder(newOrder);
+    localStorage.setItem('theSystemTabOrder', JSON.stringify(newOrder));
+    soundManager.success();
+  };
 
   const handleTouchStart = (e) => {
     touchStart.current = {
@@ -3122,6 +3706,7 @@ const App = () => {
     };
     touchEnd.current = { x: 0, y: 0 };
     setSwipeIndicator(null);
+    setSwipeProgress(0);
   };
 
   const handleTouchMove = (e) => {
@@ -3133,23 +3718,33 @@ const App = () => {
     const deltaX = touchStart.current.x - touchEnd.current.x;
     const deltaY = touchStart.current.y - touchEnd.current.y;
 
+    // Calculate swipe progress for gooey animation (-1 to 1)
+    const screenWidth = window.innerWidth;
+    const maxSwipeDistance = screenWidth * 0.4; // 40% of screen = full progress
+    const normalizedProgress = Math.max(-1, Math.min(1, deltaX / maxSwipeDistance));
+
     // Only show indicator for clearly horizontal swipes (2:1 ratio)
     if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 2) {
       const currentIndex = tabOrder.indexOf(activeTab);
       if (deltaX > 0 && currentIndex < tabOrder.length - 1) {
         setSwipeIndicator('left');
+        setSwipeProgress(normalizedProgress);
       } else if (deltaX < 0 && currentIndex > 0) {
         setSwipeIndicator('right');
+        setSwipeProgress(normalizedProgress);
       } else {
         setSwipeIndicator(null);
+        setSwipeProgress(0);
       }
     } else {
       setSwipeIndicator(null);
+      setSwipeProgress(0);
     }
   };
 
   const handleTouchEnd = () => {
     setSwipeIndicator(null);
+    setSwipeProgress(0);
 
     // No movement recorded
     if (touchEnd.current.x === 0 && touchEnd.current.y === 0) {
@@ -3252,19 +3847,14 @@ const App = () => {
     localStorage.setItem('theSystem', JSON.stringify(state));
   }, [state]);
 
-  // Check for level/rank ups
+  // Check for level/rank ups (new system: level = rank)
   useEffect(() => {
-    const currentLevel = calculateLevel(state.player.totalXp);
-    const currentRank = getRank(currentLevel);
+    const currentRank = getRank(state.player.totalXp);
+    const currentLevel = currentRank.level;
 
     if (currentLevel > previousLevel.current) {
-      // Level up!
-      if (currentRank.name !== previousRank.current.name) {
-        // Rank up!
-        setCelebration({ type: 'rankUp', rank: currentRank });
-      } else {
-        setCelebration({ type: 'levelUp', level: currentLevel, rank: currentRank });
-      }
+      // Rank up! (level and rank are now the same)
+      setCelebration({ type: 'rankUp', rank: currentRank });
     }
 
     previousLevel.current = currentLevel;
@@ -3290,7 +3880,6 @@ const App = () => {
           player: {
             ...prev.player,
             totalXp: Math.max(0, prev.player.totalXp - penalty),
-            health: Math.max(0, prev.player.health - 10),
             lastLoginDate: today,
             checkedInToday: false
           }
@@ -3343,7 +3932,8 @@ const App = () => {
       },
       habits: playerData.habits || [],
       quests: playerData.quests || [],
-      rewards: trackRewards
+      rewards: trackRewards,
+      vision: playerData.vision || { fuel: '', fear: '' }
     }));
   };
 
@@ -3406,13 +3996,12 @@ const App = () => {
       ...prev,
       player: {
         ...prev.player,
-        totalXp: Math.max(0, prev.player.totalXp - doublePenalty),
-        health: Math.max(0, prev.player.health - 5)
+        totalXp: Math.max(0, prev.player.totalXp - doublePenalty)
       },
       quests: prev.quests.filter(q => q.id !== quest.id),
       questLog: [...prev.questLog, { ...quest, completed: false, penaltyApplied: doublePenalty, completedAt: new Date().toISOString() }]
     }));
-    showNotification(`Quest Failed! -${doublePenalty} XP -5 Health`, 'error');
+    showNotification(`Quest Failed! -${doublePenalty} XP`, 'error');
   };
 
   const handleDeleteQuest = (questId) => {
@@ -3545,17 +4134,42 @@ const App = () => {
     showNotification('System has been reset. Start fresh.', 'error');
   };
 
+  const handleImportData = (importedState) => {
+    // Merge imported data with current state structure to handle any missing fields
+    setState(prev => ({
+      ...prev,
+      ...importedState,
+      onboarded: importedState.onboarded ?? prev.onboarded,
+      player: {
+        ...prev.player,
+        ...importedState.player
+      },
+      quests: importedState.quests || [],
+      questLog: importedState.questLog || [],
+      habits: importedState.habits || [],
+      habitLog: importedState.habitLog || {},
+      habitStreaks: importedState.habitStreaks || {},
+      vision: {
+        ...prev.vision,
+        ...importedState.vision
+      },
+      rewards: importedState.rewards || []
+    }));
+  };
+
   const handleCloseCelebration = useCallback(() => {
     setCelebration(null);
   }, []);
 
-  const tabs = [
-    { id: 'home', icon: Home, label: 'Home' },
-    { id: 'habits', icon: Flame, label: 'Habits' },
-    { id: 'quests', icon: Swords, label: 'Quests' },
-    { id: 'shop', icon: ShoppingBag, label: 'Shop' },
-    { id: 'awakening', icon: Eye, label: 'Vision' }
-  ];
+  const allTabs = {
+    home: { id: 'home', icon: Eye, label: 'Reflect' },
+    habits: { id: 'habits', icon: Flame, label: 'Habits' },
+    quests: { id: 'quests', icon: Swords, label: 'Quests' },
+    shop: { id: 'shop', icon: ShoppingBag, label: 'Shop' },
+    awakening: { id: 'awakening', icon: Shield, label: 'Settings' }
+  };
+
+  const tabs = tabOrder.map(id => allTabs[id]);
 
   // Show onboarding if not completed
   if (!state.onboarded) {
@@ -3709,6 +4323,7 @@ const App = () => {
           <Dashboard
             state={state}
             onLoginReward={handleLoginReward}
+            onToggleHabit={handleToggleHabit}
             showNotification={showNotification}
             soundEnabled={soundEnabled}
             onToggleSound={toggleSound}
@@ -3727,11 +4342,14 @@ const App = () => {
           />
         )}
         {activeTab === 'awakening' && (
-          <Awakening
+          <Settings
             state={state}
             onUpdateVision={handleUpdateVision}
             onResetSystem={handleResetSystem}
+            onImportData={handleImportData}
             showNotification={showNotification}
+            tabOrder={customTabOrder}
+            onUpdateTabOrder={handleUpdateTabOrder}
           />
         )}
         {activeTab === 'habits' && (
@@ -3755,11 +4373,72 @@ const App = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="bg-cyber-dark border-t border-cyber-cyan/20 px-2 py-2 safe-area-bottom">
-        <div className="flex justify-around">
-          {tabs.map(tab => {
+      <nav ref={navRef} className="bg-cyber-dark border-t border-cyber-cyan/20 px-2 py-2 safe-area-bottom">
+        <div className="flex justify-around relative">
+          {/* Gooey Indicator */}
+          {(() => {
+            const activeIndex = tabOrder.indexOf(activeTab);
+            const tabWidth = 100 / tabs.length;
+            const basePosition = activeIndex * tabWidth + tabWidth / 2;
+
+            // Calculate stretch based on swipe progress
+            const stretchAmount = Math.abs(swipeProgress) * 30; // Max 30% stretch
+            const moveAmount = swipeProgress * (tabWidth * 0.6); // Move towards target
+
+            // Determine stretch direction
+            const isStretchingRight = swipeProgress > 0;
+            const isStretchingLeft = swipeProgress < 0;
+
+            return (
+              <div
+                className="absolute top-0 h-full pointer-events-none"
+                style={{
+                  left: `${basePosition}%`,
+                  transform: `translateX(-50%)`,
+                  width: `${tabWidth}%`,
+                  transition: swipeProgress === 0 ? 'all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)' : 'none'
+                }}
+              >
+                {/* Main gooey blob */}
+                <div
+                  className="absolute bottom-1 left-1/2 h-1 bg-cyber-cyan rounded-full"
+                  style={{
+                    width: `${24 + stretchAmount}px`,
+                    transform: `translateX(calc(-50% + ${moveAmount}%))`,
+                    boxShadow: '0 0 10px rgba(0, 255, 255, 0.6), 0 0 20px rgba(0, 255, 255, 0.3)',
+                    borderRadius: isStretchingRight
+                      ? '4px 12px 12px 4px'
+                      : isStretchingLeft
+                        ? '12px 4px 4px 12px'
+                        : '6px',
+                    transition: swipeProgress === 0 ? 'all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)' : 'none'
+                  }}
+                />
+                {/* Trailing gooey tail */}
+                {Math.abs(swipeProgress) > 0.1 && (
+                  <div
+                    className="absolute bottom-1 left-1/2 h-1 bg-cyber-cyan/40 rounded-full"
+                    style={{
+                      width: `${stretchAmount * 0.8}px`,
+                      transform: `translateX(calc(-50% ${isStretchingRight ? '-' : '+'} ${12 + stretchAmount/3}px))`,
+                      opacity: Math.abs(swipeProgress) * 0.6,
+                      transition: 'opacity 0.1s'
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })()}
+
+          {tabs.map((tab, index) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
+            const activeIndex = tabOrder.indexOf(activeTab);
+
+            // Calculate if this tab is the target of the swipe
+            const isTargetTab = (swipeProgress > 0 && index === activeIndex + 1) ||
+                               (swipeProgress < 0 && index === activeIndex - 1);
+
             return (
               <button
                 key={tab.id}
@@ -3769,13 +4448,25 @@ const App = () => {
                     setActiveTab(tab.id);
                   }
                 }}
-                className={`flex flex-col items-center py-2 px-3 rounded-lg transition-all btn-press ${
+                className={`flex flex-col items-center py-2 px-3 rounded-lg transition-all btn-press relative z-10 ${
                   isActive
-                    ? 'text-cyber-cyan bg-cyber-cyan/10'
-                    : 'text-gray-500 hover:text-gray-400'
+                    ? 'text-cyber-cyan'
+                    : isTargetTab && Math.abs(swipeProgress) > 0.2
+                      ? 'text-cyber-cyan/60'
+                      : 'text-gray-500 hover:text-gray-400'
                 }`}
+                style={{
+                  transform: isTargetTab ? `scale(${1 + Math.abs(swipeProgress) * 0.1})` : 'scale(1)',
+                  transition: 'transform 0.1s ease-out, color 0.2s'
+                }}
               >
-                <Icon size={20} className={isActive ? 'animate-pulse' : ''} />
+                <Icon
+                  size={20}
+                  className={isActive ? 'animate-pulse' : ''}
+                  style={{
+                    filter: isActive ? 'drop-shadow(0 0 6px rgba(0, 255, 255, 0.8))' : 'none'
+                  }}
+                />
                 <span className="text-xs mt-1 font-medium">{tab.label}</span>
               </button>
             );
