@@ -2015,12 +2015,14 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
   };
 
   const getRankIcon = (rankId) => {
+    const rankInfo = getQuestRankInfo(rankId);
+    const iconStyle = { color: rankInfo.color };
     switch (rankId) {
-      case 'S': return <Skull size={14} />;
-      case 'A': return <Flame size={14} />;
-      case 'B': return <Swords size={14} />;
-      case 'C': return <Scroll size={14} />;
-      default: return <Swords size={14} />;
+      case 'S': return <Skull size={20} style={iconStyle} />;
+      case 'A': return <Flame size={20} style={iconStyle} />;
+      case 'B': return <Swords size={20} style={iconStyle} />;
+      case 'C': return <Scroll size={20} style={iconStyle} />;
+      default: return <Swords size={20} style={iconStyle} />;
     }
   };
 
@@ -2235,24 +2237,13 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
                 return (
                   <div
                     key={quest.id}
-                    className="bg-cyber-dark rounded-xl overflow-hidden animate-slideUp relative"
-                    style={{
-                      animationDelay: `${i * 0.05}s`,
-                      borderLeft: `3px solid ${rankInfo.color}`,
-                      boxShadow: quest.rank === 'S' ? `0 0 20px ${rankInfo.color}30` : undefined
-                    }}
+                    className="bg-cyber-dark rounded-xl overflow-hidden animate-slideUp"
+                    style={{ animationDelay: `${i * 0.05}s` }}
                   >
-                    {/* Rank Glow Effect for S-Rank */}
-                    {quest.rank === 'S' && (
-                      <div
-                        className="absolute inset-0 opacity-10 animate-pulse"
-                        style={{ background: `linear-gradient(90deg, ${rankInfo.color}20, transparent)` }}
-                      />
-                    )}
 
                     <div className="p-4 relative">
                       {/* Quest Header */}
-                      <div className="flex items-start gap-3 mb-3">
+                      <div className="flex items-center gap-3 mb-3">
                         {/* Priority Controls */}
                         <div className="flex flex-col gap-1">
                           <button
@@ -2279,25 +2270,17 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
                           </button>
                         </div>
 
-                        {/* Rank Badge */}
+                        {/* Rank Badge - Icon only */}
                         <div
-                          className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0"
-                          style={{ backgroundColor: rankInfo.bgColor }}
+                          className={`flex items-center justify-center w-11 h-11 flex-shrink-0 ${quest.rank === 'S' ? 'animate-pulse' : ''}`}
                         >
-                          <span className="font-display font-black text-lg" style={{ color: rankInfo.color }}>
-                            {quest.rank || 'B'}
-                          </span>
+                          {getRankIcon(quest.rank)}
                         </div>
 
                         {/* Quest Info */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <h4 className="font-bold text-white mb-0.5 leading-tight">{quest.name}</h4>
-                              <p className="text-xs" style={{ color: rankInfo.color }}>
-                                {rankInfo.label} PRIORITY
-                              </p>
-                            </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <h4 className="font-bold text-white leading-tight">{quest.name}</h4>
                             {deleteConfirm === quest.id ? (
                               <div className="flex items-center gap-1 flex-shrink-0">
                                 <button
@@ -2340,20 +2323,22 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
                         </div>
                       </div>
 
-                      {/* Rewards Row */}
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="bg-cyber-cyan/20 text-cyber-cyan px-2 py-1 rounded flex items-center gap-1">
-                          <Zap size={10} /> {quest.reward} XP
+                      {/* Rewards Row - Minimal inline style */}
+                      <div className="flex items-center gap-3 text-xs text-gray-400">
+                        <span className="flex items-center gap-1">
+                          <Zap size={12} className="text-cyber-cyan" />
+                          <span className="text-gray-300">{quest.reward}</span>
                         </span>
-                        <span className="bg-cyber-gold/20 text-cyber-gold px-2 py-1 rounded flex items-center gap-1">
-                          <Coins size={10} /> {quest.goldReward}
+                        <span className="flex items-center gap-1">
+                          <Coins size={12} className="text-cyber-gold" />
+                          <span className="text-gray-300">{quest.goldReward}</span>
                         </span>
-                        <span className="bg-cyber-red/20 text-cyber-red px-2 py-1 rounded">
-                          -{quest.penalty}
+                        <span className="flex items-center gap-1 text-gray-500">
+                          <span>−{quest.penalty}</span>
                         </span>
                         {rankInfo.multiplier > 1 && (
-                          <span className="text-gray-500 text-[10px]">
-                            ({rankInfo.multiplier}x)
+                          <span className="text-gray-600 text-[10px]">
+                            {rankInfo.multiplier}x
                           </span>
                         )}
                       </div>
@@ -2361,23 +2346,23 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
                       {/* Separator */}
                       <div className="border-t border-dashed border-gray-700/50 my-3" />
 
-                      {/* Action Buttons */}
+                      {/* Action Buttons - Ghost/Outline style */}
                       <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => onCompleteQuest(quest)}
-                          className="bg-cyber-green/20 text-cyber-green py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 btn-press hover:bg-cyber-green/30 hover:shadow-lg transition-all"
+                          className="border border-cyber-green/40 text-cyber-green py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-1 btn-press hover:bg-cyber-green/15 hover:border-cyber-green transition-all"
                         >
                           <Check size={14} /> Done
                         </button>
                         <button
                           onClick={() => onSkipQuest(quest)}
-                          className="bg-cyber-gold/20 text-cyber-gold py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 btn-press hover:bg-cyber-gold/30 transition-all"
+                          className="border border-gray-600 text-gray-400 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-1 btn-press hover:bg-gray-700/30 hover:text-gray-300 transition-all"
                         >
                           <SkipForward size={14} /> Skip
                         </button>
                         <button
                           onClick={() => onFailQuest(quest)}
-                          className="bg-cyber-red/20 text-cyber-red py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 btn-press hover:bg-cyber-red/30 transition-all"
+                          className="border border-cyber-red/40 text-cyber-red/70 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-1 btn-press hover:bg-cyber-red/15 hover:text-cyber-red hover:border-cyber-red transition-all"
                         >
                           <X size={14} /> Fail
                         </button>
