@@ -8,7 +8,6 @@ import {
   Plus,
   Check,
   X,
-  SkipForward,
   Trophy,
   Zap,
   Coins,
@@ -38,7 +37,8 @@ import {
   Smartphone,
   GripVertical,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Undo2
 } from 'lucide-react';
 
 // ==================== SOUND & HAPTICS SYSTEM ====================
@@ -255,16 +255,6 @@ class SoundManager {
     setTimeout(() => this.playTone(100, 0.4, 'sawtooth', 0.15), 150);
     // Harsh warning vibration
     this.vibrate([100, 50, 150]);
-  }
-
-  // Skip - warning tone
-  skip() {
-    this.init();
-    this.playSequence([
-      { freq: 400, duration: 0.1, gain: 0.2 },
-      { freq: 300, duration: 0.15, gain: 0.15 }
-    ], 0.08);
-    this.vibrate([50, 30, 80]); // Warning pattern
   }
 
   // Daily check-in - warm welcome
@@ -649,7 +639,12 @@ const getInitialState = () => {
   const saved = localStorage.getItem('theSystem');
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Deduplicate questLog - only remove true duplicates (same ID + same completedAt)
+      if (parsed.questLog && parsed.questLog.length > 0) {
+        parsed.questLog = [...new Map(parsed.questLog.map(q => [`${q.id}-${q.completedAt}`, q])).values()];
+      }
+      return parsed;
     } catch (e) {
       console.error('Failed to parse saved state:', e);
     }
@@ -1195,7 +1190,7 @@ const Onboarding = ({ onComplete }) => {
                   </div>
                   <div>
                     <p className="font-bold text-white text-sm">Penalties</p>
-                    <p className="text-gray-500 text-xs">Fail or skip? Face consequences.</p>
+                    <p className="text-gray-500 text-xs">Fail? Face consequences.</p>
                   </div>
                 </div>
               </div>
@@ -1429,7 +1424,7 @@ const AwakeningSequence = ({ onComplete, playerName }) => {
               THE SYSTEM is now bound to you.
             </p>
             <p className="text-cyber-cyan font-display mt-4">
-              Level 1 • E-Rank
+              Level 1 • Silver Rank
             </p>
           </div>
         )}
@@ -1983,7 +1978,7 @@ const Dashboard = ({ state, onLoginReward, showNotification }) => {
 };
 
 // ==================== QUESTS SYSTEM ====================
-const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, onDeleteQuest, onReorderQuest, showNotification }) => {
+const Quests = ({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest, onUndoQuest, showNotification }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -1992,22 +1987,33 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
   });
   const [newQuest, setNewQuest] = useState({
     name: '',
-    reward: 50,
-    penalty: 25,
-    timeBlock: '',
-    goldReward: 10,
+    dueDate: '',
     rank: 'B'
   });
+  const dateInputRef = useRef(null);
 
-  // Get active quests sorted by rank priority
+  // Get active quests sorted by: earliest due date → threat level → no date last
   const rankOrder = { 'S': 0, 'A': 1, 'B': 2, 'C': 3 };
   const activeQuests = state.quests
     .filter(q => !q.completed && !q.failed)
     .sort((a, b) => {
+      // Quests with due dates come first, sorted by earliest date
+      const hasDateA = !!a.dueDate;
+      const hasDateB = !!b.dueDate;
+
+      if (hasDateA && !hasDateB) return -1; // A has date, B doesn't → A first
+      if (!hasDateA && hasDateB) return 1;  // B has date, A doesn't → B first
+
+      if (hasDateA && hasDateB) {
+        // Both have dates - sort by earliest date first
+        const dateCompare = new Date(a.dueDate) - new Date(b.dueDate);
+        if (dateCompare !== 0) return dateCompare;
+      }
+
+      // Same date or both no date - sort by threat level (S > A > B > C)
       const rankA = rankOrder[a.rank] ?? 2;
       const rankB = rankOrder[b.rank] ?? 2;
-      if (rankA !== rankB) return rankA - rankB;
-      return new Date(a.createdAt) - new Date(b.createdAt);
+      return rankA - rankB;
     });
 
   const getQuestRankInfo = (rankId) => {
@@ -2029,9 +2035,10 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
   const handleAddQuest = () => {
     if (!newQuest.name.trim()) return;
     const rankInfo = getQuestRankInfo(newQuest.rank);
-    const baseReward = parseInt(newQuest.reward) || 50;
-    const baseGold = parseInt(newQuest.goldReward) || 10;
-    const basePenalty = parseInt(newQuest.penalty) || 25;
+    // Fixed base values
+    const baseReward = 50;
+    const baseGold = 50;
+    const basePenalty = 25;
 
     onAddQuest({
       id: generateId(),
@@ -2039,27 +2046,16 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
       reward: Math.round(baseReward * rankInfo.multiplier),
       penalty: Math.round(basePenalty * rankInfo.multiplier),
       goldReward: Math.round(baseGold * rankInfo.multiplier),
-      timeBlock: newQuest.timeBlock,
+      dueDate: newQuest.dueDate,
       rank: newQuest.rank,
       createdAt: new Date().toISOString(),
       completed: false,
       failed: false
     });
-    setNewQuest({ name: '', reward: 50, penalty: 25, timeBlock: '', goldReward: 10, rank: 'B' });
+    setNewQuest({ name: '', dueDate: '', rank: 'B' });
     setShowAddModal(false);
     soundManager.success();
     showNotification('Quest Added!', 'success');
-  };
-
-  const handleMoveQuest = (quest, direction) => {
-    soundManager.click();
-    const currentIndex = activeQuests.findIndex(q => q.id === quest.id);
-    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex < 0 || newIndex >= activeQuests.length) return;
-    const targetQuest = activeQuests[newIndex];
-    if (onReorderQuest) {
-      onReorderQuest(quest.id, targetQuest.rank, targetQuest.id, quest.rank);
-    }
   };
 
   const handleDismissIntro = () => {
@@ -2080,7 +2076,7 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
             </div>
 
             <p className="text-gray-300 text-sm text-center mb-5">
-              Quests are your tasks. Complete them to earn XP and Gold. Fail or skip them and face penalties.
+              Quests are your tasks. Complete them to earn XP and Gold. Fail them and face penalties.
             </p>
 
             <div className="space-y-3 mb-5">
@@ -2134,11 +2130,11 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
           <div className="flex gap-2">
             <button
               onClick={() => setShowLog(!showLog)}
-              className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${
+              className={`px-3 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-1 ${
                 showLog ? 'bg-cyber-cyan text-black' : 'bg-cyber-gray text-gray-400'
               }`}
             >
-              <Scroll size={16} />
+              <Scroll size={16} /> Log
             </button>
             <button
               onClick={() => setShowAddModal(true)}
@@ -2179,41 +2175,53 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
             {state.questLog.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No completed quests yet.</p>
             ) : (
-              state.questLog.slice().reverse().map((quest, i) => {
-                const rankInfo = getQuestRankInfo(quest.rank);
+              // Deduplicate - only remove true duplicates (same ID + same completedAt)
+              [...new Map(state.questLog.map(q => [`${q.id}-${q.completedAt}`, q])).values()].slice().reverse().map((quest, i) => {
                 return (
                   <div
-                    key={quest.id}
-                    className={`bg-cyber-dark rounded-lg p-4 border animate-fadeIn ${
-                      quest.completed ? 'border-cyber-green/30' : 'border-cyber-red/30'
-                    }`}
+                    key={`${quest.id}-${quest.completedAt}`}
+                    className="bg-cyber-dark rounded-lg px-3 py-2 animate-fadeIn flex items-center gap-3"
                     style={{ animationDelay: `${i * 0.05}s` }}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {quest.rank && (
-                          <span
-                            className="px-2 py-0.5 rounded text-xs font-bold"
-                            style={{ backgroundColor: rankInfo.bgColor, color: rankInfo.color }}
-                          >
-                            {quest.rank}
-                          </span>
-                        )}
-                        <span className="text-white font-medium">{quest.name}</span>
-                      </div>
-                      {quest.completed ? (
-                        <span className="text-cyber-green text-xs font-bold flex items-center gap-1">
-                          <Check size={14} /> +{quest.reward} XP
-                        </span>
-                      ) : (
-                        <span className="text-cyber-red text-xs font-bold flex items-center gap-1">
-                          <X size={14} /> -{quest.penaltyApplied} XP
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-500 text-xs mt-1">
-                      {new Date(quest.completedAt).toLocaleDateString()}
-                    </p>
+                    {/* Status indicator */}
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                      quest.completed ? 'bg-cyber-green' : 'bg-cyber-red'
+                    }`} />
+
+                    {/* Due date */}
+                    {quest.dueDate && (
+                      <span className="text-gray-500 text-xs flex-shrink-0 w-12">
+                        {new Date(quest.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
+
+                    {/* Title */}
+                    <span className="text-white text-sm flex-1 truncate">{quest.name}</span>
+
+                    {/* Status badge */}
+                    <span className={`text-[10px] px-2 py-0.5 rounded flex-shrink-0 ${
+                      quest.completed
+                        ? 'bg-cyber-green/20 text-cyber-green'
+                        : quest.failReason === 'overdue'
+                          ? 'bg-cyber-gold/20 text-cyber-gold'
+                          : 'bg-cyber-red/20 text-cyber-red'
+                    }`}>
+                      {quest.completed ? 'Done' : quest.failReason === 'overdue' ? 'Overdue' : 'Failed'}
+                    </span>
+
+                    {/* Undo button - only show if due date is in future or no due date */}
+                    {(() => {
+                      const canUndo = !quest.dueDate || new Date(quest.dueDate) >= new Date(new Date().toDateString());
+                      return canUndo ? (
+                        <button
+                          onClick={() => onUndoQuest(quest)}
+                          className="text-gray-400 hover:text-cyber-cyan p-1.5 rounded hover:bg-cyber-cyan/10 transition-colors flex-shrink-0"
+                          title="Undo"
+                        >
+                          <Undo2 size={16} />
+                        </button>
+                      ) : null;
+                    })()}
                   </div>
                 );
               })
@@ -2230,142 +2238,84 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
               </div>
             ) : (
               activeQuests.map((quest, i) => {
-                const rankInfo = getQuestRankInfo(quest.rank);
-                const isFirst = i === 0;
-                const isLast = i === activeQuests.length - 1;
-
                 return (
                   <div
                     key={quest.id}
-                    className="bg-cyber-dark rounded-xl overflow-hidden animate-slideUp"
+                    className="bg-gray-800/80 rounded-lg px-3 py-2.5 animate-slideUp"
                     style={{ animationDelay: `${i * 0.05}s` }}
                   >
+                    {/* Main Row */}
+                    <div className="flex items-center gap-2">
+                      {/* Rank Icon */}
+                      <div className={`flex-shrink-0 ${quest.rank === 'S' ? 'animate-pulse' : ''}`}>
+                        {getRankIcon(quest.rank)}
+                      </div>
 
-                    <div className="p-4 relative">
-                      {/* Quest Header */}
-                      <div className="flex items-center gap-3 mb-3">
-                        {/* Priority Controls */}
-                        <div className="flex flex-col gap-1">
-                          <button
-                            onClick={() => handleMoveQuest(quest, 'up')}
-                            disabled={isFirst}
-                            className={`p-1 rounded transition-all ${
-                              isFirst
-                                ? 'text-gray-700 cursor-not-allowed'
-                                : 'text-gray-500 hover:text-cyber-cyan hover:bg-cyber-cyan/10'
-                            }`}
-                          >
-                            <ChevronUp size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleMoveQuest(quest, 'down')}
-                            disabled={isLast}
-                            className={`p-1 rounded transition-all ${
-                              isLast
-                                ? 'text-gray-700 cursor-not-allowed'
-                                : 'text-gray-500 hover:text-cyber-cyan hover:bg-cyber-cyan/10'
-                            }`}
-                          >
-                            <ChevronDown size={16} />
-                          </button>
-                        </div>
-
-                        {/* Rank Badge - Icon only */}
-                        <div
-                          className={`flex items-center justify-center w-11 h-11 flex-shrink-0 ${quest.rank === 'S' ? 'animate-pulse' : ''}`}
-                        >
-                          {getRankIcon(quest.rank)}
-                        </div>
-
-                        {/* Quest Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <h4 className="font-bold text-white leading-tight">{quest.name}</h4>
-                            {deleteConfirm === quest.id ? (
-                              <div className="flex items-center gap-1 flex-shrink-0">
-                                <button
-                                  onClick={() => {
-                                    soundManager.click();
-                                    onDeleteQuest(quest.id);
-                                    setDeleteConfirm(null);
-                                  }}
-                                  className="text-xs bg-cyber-red text-white px-2 py-1 rounded font-bold"
-                                >
-                                  Yes
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    soundManager.click();
-                                    setDeleteConfirm(null);
-                                  }}
-                                  className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded"
-                                >
-                                  No
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => {
-                                  soundManager.click();
-                                  setDeleteConfirm(quest.id);
-                                }}
-                                className="text-gray-600 hover:text-cyber-red p-1 transition-colors flex-shrink-0"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            )}
-                          </div>
-                          {quest.timeBlock && (
-                            <p className="text-gray-500 text-xs flex items-center gap-1 mt-1">
-                              <Clock size={10} /> {quest.timeBlock}
-                            </p>
+                      {/* Quest Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <span className="text-white text-sm font-medium break-words">{quest.name}</span>
+                          {quest.dueDate && (
+                            <span className="text-gray-500 text-[10px] flex items-center gap-0.5 flex-shrink-0">
+                              <Calendar size={10} />
+                              {new Date(quest.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </span>
                           )}
                         </div>
-                      </div>
-
-                      {/* Rewards Row - Minimal inline style */}
-                      <div className="flex items-center gap-3 text-xs text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <Zap size={12} className="text-cyber-cyan" />
-                          <span className="text-gray-300">{quest.reward}</span>
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Coins size={12} className="text-cyber-gold" />
-                          <span className="text-gray-300">{quest.goldReward}</span>
-                        </span>
-                        <span className="flex items-center gap-1 text-gray-500">
-                          <span>−{quest.penalty}</span>
-                        </span>
-                        {rankInfo.multiplier > 1 && (
-                          <span className="text-gray-600 text-[10px]">
-                            {rankInfo.multiplier}x
+                        {/* Rewards inline */}
+                        <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-0.5">
+                          <span className="flex items-center gap-0.5">
+                            <Zap size={10} className="text-cyber-cyan" />
+                            {quest.reward}
                           </span>
-                        )}
+                          <span className="flex items-center gap-0.5">
+                            <Coins size={10} className="text-cyber-gold" />
+                            {quest.goldReward}
+                          </span>
+                          <span className="text-gray-600">−{quest.penalty}</span>
+                        </div>
                       </div>
 
-                      {/* Separator */}
-                      <div className="border-t border-dashed border-gray-700/50 my-3" />
-
-                      {/* Action Buttons - Ghost/Outline style */}
-                      <div className="grid grid-cols-3 gap-2">
+                      {/* Action Buttons - Compact */}
+                      <div className="flex items-center gap-1 flex-shrink-0">
                         <button
                           onClick={() => onCompleteQuest(quest)}
-                          className="border border-cyber-green/40 text-cyber-green py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-1 btn-press hover:bg-cyber-green/15 hover:border-cyber-green transition-all"
+                          className="bg-cyber-green/20 text-cyber-green p-2 rounded-lg btn-press hover:bg-cyber-green/30 transition-all"
+                          title="Done"
                         >
-                          <Check size={14} /> Done
-                        </button>
-                        <button
-                          onClick={() => onSkipQuest(quest)}
-                          className="border border-gray-600 text-gray-400 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-1 btn-press hover:bg-gray-700/30 hover:text-gray-300 transition-all"
-                        >
-                          <SkipForward size={14} /> Skip
+                          <Check size={16} />
                         </button>
                         <button
                           onClick={() => onFailQuest(quest)}
-                          className="border border-cyber-red/40 text-cyber-red/70 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-1 btn-press hover:bg-cyber-red/15 hover:text-cyber-red hover:border-cyber-red transition-all"
+                          className="bg-cyber-red/10 text-cyber-red/60 p-2 rounded-lg btn-press hover:bg-cyber-red/20 hover:text-cyber-red transition-all"
+                          title="Fail"
                         >
-                          <X size={14} /> Fail
+                          <X size={16} />
                         </button>
+                        {deleteConfirm === quest.id ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => { soundManager.click(); onDeleteQuest(quest.id); setDeleteConfirm(null); }}
+                              className="text-[10px] bg-cyber-red text-white px-1.5 py-1 rounded font-bold"
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={() => { soundManager.click(); setDeleteConfirm(null); }}
+                              className="text-[10px] bg-gray-700 text-gray-300 px-1.5 py-1 rounded"
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => { soundManager.click(); setDeleteConfirm(quest.id); }}
+                            className="text-gray-600 hover:text-cyber-red p-1.5 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2383,7 +2333,7 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
           <div>
             <label className="text-gray-400 text-xs uppercase tracking-wider block mb-2">Threat Level</label>
             <div className="grid grid-cols-4 gap-2">
-              {QUEST_RANKS.map(rank => (
+              {QUEST_RANKS.slice().reverse().map(rank => (
                 <button
                   key={rank.id}
                   onClick={() => setNewQuest({ ...newQuest, rank: rank.id })}
@@ -2396,9 +2346,7 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
                   }}
                 >
                   <div className="flex flex-col items-center gap-1">
-                    <span className="font-display font-black text-lg" style={{ color: rank.color }}>
-                      {rank.id}
-                    </span>
+                    {getRankIcon(rank.id)}
                     <span className="text-[10px] text-gray-400">{rank.multiplier}x</span>
                   </div>
                 </button>
@@ -2421,58 +2369,69 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onSkipQuest, onFailQuest, 
           </div>
 
           <div>
-            <label className="text-gray-400 text-xs uppercase tracking-wider block mb-1">Time Block (optional)</label>
-            <input
-              type="text"
-              value={newQuest.timeBlock}
-              onChange={e => setNewQuest({ ...newQuest, timeBlock: e.target.value })}
-              className="w-full bg-cyber-gray text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-cyber-cyan transition-all"
-              placeholder="e.g., 9:00 AM - 10:00 AM"
-            />
+            <label className="text-gray-400 text-xs uppercase tracking-wider block mb-1">Due Date (optional)</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const tomorrow = new Date();
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+                  setNewQuest({ ...newQuest, dueDate: tomorrow.toISOString().split('T')[0] });
+                }}
+                className={`flex-1 py-3 rounded-lg font-medium text-sm transition-all ${
+                  newQuest.dueDate === new Date(Date.now() + 86400000).toISOString().split('T')[0]
+                    ? 'bg-cyber-cyan text-black'
+                    : 'bg-cyber-gray text-gray-400 hover:text-white'
+                }`}
+              >
+                Tomorrow
+              </button>
+              <button
+                type="button"
+                onClick={() => dateInputRef.current?.showPicker()}
+                className={`flex-1 py-3 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${
+                  newQuest.dueDate && newQuest.dueDate !== new Date(Date.now() + 86400000).toISOString().split('T')[0]
+                    ? 'bg-cyber-cyan text-black'
+                    : 'bg-cyber-gray text-gray-400 hover:text-white'
+                }`}
+              >
+                <Calendar size={14} />
+                {newQuest.dueDate && newQuest.dueDate !== new Date(Date.now() + 86400000).toISOString().split('T')[0]
+                  ? new Date(newQuest.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                  : 'Select'}
+              </button>
+              <input
+                ref={dateInputRef}
+                type="date"
+                value={newQuest.dueDate}
+                min={new Date().toISOString().split('T')[0]}
+                onChange={e => setNewQuest({ ...newQuest, dueDate: e.target.value })}
+                className="sr-only"
+              />
+            </div>
+            {newQuest.dueDate && (
+              <button
+                type="button"
+                onClick={() => setNewQuest({ ...newQuest, dueDate: '' })}
+                className="text-gray-500 text-xs mt-2 hover:text-gray-400"
+              >
+                Clear date
+              </button>
+            )}
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="text-cyber-cyan text-xs uppercase tracking-wider block mb-1">Base XP</label>
-              <input
-                type="number"
-                value={newQuest.reward}
-                onChange={e => setNewQuest({ ...newQuest, reward: e.target.value })}
-                className="w-full bg-cyber-gray text-white rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-cyber-cyan text-center"
-              />
-            </div>
-            <div>
-              <label className="text-cyber-gold text-xs uppercase tracking-wider block mb-1">Base Gold</label>
-              <input
-                type="number"
-                value={newQuest.goldReward}
-                onChange={e => setNewQuest({ ...newQuest, goldReward: e.target.value })}
-                className="w-full bg-cyber-gray text-white rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-cyber-cyan text-center"
-              />
-            </div>
-            <div>
-              <label className="text-cyber-red text-xs uppercase tracking-wider block mb-1">Penalty</label>
-              <input
-                type="number"
-                value={newQuest.penalty}
-                onChange={e => setNewQuest({ ...newQuest, penalty: e.target.value })}
-                className="w-full bg-cyber-gray text-white rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-cyber-cyan text-center"
-              />
-            </div>
-          </div>
-
-          {/* Preview */}
+          {/* Final Rewards Preview */}
           <div className="bg-cyber-gray/50 rounded-lg p-3">
-            <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">Final Rewards (with multiplier)</p>
+            <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">Rewards (with {getQuestRankInfo(newQuest.rank).multiplier}x multiplier)</p>
             <div className="flex items-center justify-around text-sm">
               <span className="text-cyber-cyan font-bold">
-                {Math.round((parseInt(newQuest.reward) || 50) * getQuestRankInfo(newQuest.rank).multiplier)} XP
+                {Math.round(50 * getQuestRankInfo(newQuest.rank).multiplier)} XP
               </span>
               <span className="text-cyber-gold font-bold">
-                {Math.round((parseInt(newQuest.goldReward) || 10) * getQuestRankInfo(newQuest.rank).multiplier)} Gold
+                {Math.round(50 * getQuestRankInfo(newQuest.rank).multiplier)} Gold
               </span>
               <span className="text-cyber-red font-bold">
-                -{Math.round((parseInt(newQuest.penalty) || 25) * getQuestRankInfo(newQuest.rank).multiplier)}
+                -{Math.round(25 * getQuestRankInfo(newQuest.rank).multiplier)} Fail
               </span>
             </div>
           </div>
@@ -3908,6 +3867,61 @@ const App = () => {
     }
   }, [state.onboarded]);
 
+  // Check for overdue quests on app load (only once per session)
+  const overdueCheckDone = useRef(false);
+  useEffect(() => {
+    if (!state.onboarded || overdueCheckDone.current) return;
+    overdueCheckDone.current = true;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const overdueQuests = state.quests.filter(quest => {
+      if (!quest.dueDate) return false;
+      const dueDate = new Date(quest.dueDate);
+      dueDate.setHours(23, 59, 59, 999); // End of due date
+      return dueDate < today;
+    });
+
+    if (overdueQuests.length > 0) {
+      // Auto-fail all overdue quests
+      setState(prev => {
+        let newTotalXp = prev.player.totalXp;
+        const failedQuests = [];
+
+        overdueQuests.forEach(quest => {
+          const doublePenalty = quest.penalty * 2;
+          newTotalXp = Math.max(0, newTotalXp - doublePenalty);
+          failedQuests.push({
+            ...quest,
+            completed: false,
+            penaltyApplied: doublePenalty,
+            completedAt: new Date().toISOString(),
+            failReason: 'overdue'
+          });
+        });
+
+        return {
+          ...prev,
+          player: {
+            ...prev.player,
+            totalXp: newTotalXp
+          },
+          quests: prev.quests.filter(q => !overdueQuests.find(oq => oq.id === q.id)),
+          questLog: [...prev.questLog, ...failedQuests]
+        };
+      });
+
+      soundManager.penalty();
+      setTimeout(() => {
+        setNotification({
+          message: `${overdueQuests.length} quest${overdueQuests.length > 1 ? 's' : ''} overdue!`,
+          type: 'error'
+        });
+      }, 500);
+    }
+  }, [state.onboarded]);
+
   const showNotification = useCallback((message, type = 'info') => {
     setNotification({ message, type });
   }, []);
@@ -3985,21 +3999,7 @@ const App = () => {
     }));
   };
 
-  const handleSkipQuest = (quest) => {
-    soundManager.skip();
-    setState(prev => ({
-      ...prev,
-      player: {
-        ...prev.player,
-        totalXp: Math.max(0, prev.player.totalXp - quest.penalty)
-      },
-      quests: prev.quests.filter(q => q.id !== quest.id),
-      questLog: [...prev.questLog, { ...quest, completed: false, penaltyApplied: quest.penalty, completedAt: new Date().toISOString() }]
-    }));
-    showNotification(`Quest Skipped! -${quest.penalty} XP`, 'error');
-  };
-
-  const handleFailQuest = (quest) => {
+  const handleFailQuest = (quest, reason = 'manual') => {
     soundManager.penalty();
     const doublePenalty = quest.penalty * 2;
     setState(prev => ({
@@ -4009,9 +4009,19 @@ const App = () => {
         totalXp: Math.max(0, prev.player.totalXp - doublePenalty)
       },
       quests: prev.quests.filter(q => q.id !== quest.id),
-      questLog: [...prev.questLog, { ...quest, completed: false, penaltyApplied: doublePenalty, completedAt: new Date().toISOString() }]
+      questLog: [...prev.questLog, {
+        ...quest,
+        completed: false,
+        penaltyApplied: doublePenalty,
+        completedAt: new Date().toISOString(),
+        failReason: reason
+      }]
     }));
-    showNotification(`Quest Failed! -${doublePenalty} XP`, 'error');
+    if (reason === 'overdue') {
+      showNotification(`Quest Overdue! -${doublePenalty} XP`, 'error');
+    } else {
+      showNotification(`Quest Failed! -${doublePenalty} XP`, 'error');
+    }
   };
 
   const handleDeleteQuest = (questId) => {
@@ -4021,15 +4031,51 @@ const App = () => {
     }));
   };
 
-  const handleReorderQuest = (questId1, newRank1, questId2, newRank2) => {
-    setState(prev => ({
-      ...prev,
-      quests: prev.quests.map(q => {
-        if (q.id === questId1) return { ...q, rank: newRank1 };
-        if (q.id === questId2) return { ...q, rank: newRank2 };
-        return q;
-      })
-    }));
+  const handleUndoQuest = (quest) => {
+    soundManager.click();
+    setState(prev => {
+      // Remove from questLog
+      const newQuestLog = prev.questLog.filter(q => q.id !== quest.id);
+
+      // Restore the quest (remove log-specific fields)
+      const restoredQuest = {
+        id: quest.id,
+        name: quest.name,
+        rank: quest.rank,
+        reward: quest.reward,
+        goldReward: quest.goldReward,
+        penalty: quest.penalty,
+        createdAt: quest.createdAt
+      };
+
+      // Reverse XP/gold changes
+      let newTotalXp = prev.player.totalXp;
+      let newGold = prev.player.gold;
+      let newTotalQuestsCompleted = prev.player.totalQuestsCompleted;
+
+      if (quest.completed) {
+        // Was completed - reverse the rewards
+        newTotalXp = Math.max(0, newTotalXp - quest.reward);
+        newGold = Math.max(0, newGold - quest.goldReward);
+        newTotalQuestsCompleted = Math.max(0, newTotalQuestsCompleted - 1);
+      } else {
+        // Was failed - restore the penalty
+        newTotalXp = newTotalXp + quest.penaltyApplied;
+      }
+
+      return {
+        ...prev,
+        player: {
+          ...prev.player,
+          totalXp: newTotalXp,
+          gold: newGold,
+          totalQuestsCompleted: newTotalQuestsCompleted
+        },
+        quests: [...prev.quests, restoredQuest],
+        questLog: newQuestLog
+      };
+    });
+    showNotification('Quest restored!', 'success');
   };
 
   const handleUpdateVision = (vision) => {
@@ -4381,10 +4427,9 @@ const App = () => {
             state={state}
             onAddQuest={handleAddQuest}
             onCompleteQuest={handleCompleteQuest}
-            onSkipQuest={handleSkipQuest}
             onFailQuest={handleFailQuest}
             onDeleteQuest={handleDeleteQuest}
-            onReorderQuest={handleReorderQuest}
+            onUndoQuest={handleUndoQuest}
             showNotification={showNotification}
           />
         )}
