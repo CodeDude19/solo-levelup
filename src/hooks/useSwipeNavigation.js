@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import soundManager from '../core/SoundManager';
 
 /**
@@ -15,6 +15,18 @@ const useSwipeNavigation = (activeTab, tabOrder, setActiveTab) => {
 
   const [swipeIndicator, setSwipeIndicator] = useState(null); // 'left' | 'right' | null
   const [swipeProgress, setSwipeProgress] = useState(0); // -1 to 1, for gooey animation
+
+  // Use refs to always have latest values in callbacks (avoid stale closures)
+  const activeTabRef = useRef(activeTab);
+  const tabOrderRef = useRef(tabOrder);
+
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
+
+  useEffect(() => {
+    tabOrderRef.current = tabOrder;
+  }, [tabOrder]);
 
   const handleTouchStart = useCallback((e) => {
     touchStart.current = {
@@ -40,10 +52,14 @@ const useSwipeNavigation = (activeTab, tabOrder, setActiveTab) => {
     const maxSwipeDistance = screenWidth * 0.3; // 30% of screen = full progress
     const normalizedProgress = Math.max(-1, Math.min(1, deltaX / maxSwipeDistance));
 
+    // Use refs for latest values
+    const currentTabOrder = tabOrderRef.current;
+    const currentActiveTab = activeTabRef.current;
+
     // Show indicator at the slightest horizontal movement (15px threshold, 1.5:1 ratio)
     if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
-      const currentIndex = tabOrder.indexOf(activeTab);
-      if (deltaX > 0 && currentIndex < tabOrder.length - 1) {
+      const currentIndex = currentTabOrder.indexOf(currentActiveTab);
+      if (deltaX > 0 && currentIndex < currentTabOrder.length - 1) {
         setSwipeIndicator('left');
         setSwipeProgress(normalizedProgress);
       } else if (deltaX < 0 && currentIndex > 0) {
@@ -57,7 +73,7 @@ const useSwipeNavigation = (activeTab, tabOrder, setActiveTab) => {
       setSwipeIndicator(null);
       setSwipeProgress(0);
     }
-  }, [activeTab, tabOrder]);
+  }, []);
 
   const handleTouchEnd = useCallback(() => {
     setSwipeIndicator(null);
@@ -76,22 +92,25 @@ const useSwipeNavigation = (activeTab, tabOrder, setActiveTab) => {
       return;
     }
 
-    const currentIndex = tabOrder.indexOf(activeTab);
+    // Use refs for latest values
+    const currentTabOrder = tabOrderRef.current;
+    const currentActiveTab = activeTabRef.current;
+    const currentIndex = currentTabOrder.indexOf(currentActiveTab);
 
     if (deltaX > 0) {
       // Swiped left -> go to next tab
-      if (currentIndex < tabOrder.length - 1) {
+      if (currentIndex < currentTabOrder.length - 1) {
         soundManager.tabSwitch();
-        setActiveTab(tabOrder[currentIndex + 1]);
+        setActiveTab(currentTabOrder[currentIndex + 1]);
       }
     } else {
       // Swiped right -> go to previous tab
       if (currentIndex > 0) {
         soundManager.tabSwitch();
-        setActiveTab(tabOrder[currentIndex - 1]);
+        setActiveTab(currentTabOrder[currentIndex - 1]);
       }
     }
-  }, [activeTab, tabOrder, setActiveTab]);
+  }, [setActiveTab]);
 
   return {
     swipeIndicator,

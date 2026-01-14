@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Shield, Volume2, VolumeX, Smartphone, GripVertical, ChevronRight, Download, RefreshCw, AlertTriangle, X, ChevronUp, ChevronDown, Home } from 'lucide-react';
+import { Shield, Volume2, VolumeX, Smartphone, GripVertical, ChevronRight, Download, RefreshCw, AlertTriangle, X, Home } from 'lucide-react';
 import soundManager from '../../../core/SoundManager';
 import { getToday } from '../../../utils/formatters';
 import { FALLBACK_QUOTES, TAB_INFO } from '../../../config/rewards';
@@ -12,18 +12,92 @@ const Settings = ({ state, onResetSystem, onImportData, showNotification, tabOrd
   const [showResetWarning, setShowResetWarning] = useState(false);
   const [showTabOrderModal, setShowTabOrderModal] = useState(false);
   const [tempTabOrder, setTempTabOrder] = useState(tabOrder || ['home', 'habits', 'quests', 'shop', 'awakening']);
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
   const fileInputRef = useRef(null);
 
   // Daily quote - pick one based on the day
   const todayQuote = FALLBACK_QUOTES[new Date().getDate() % FALLBACK_QUOTES.length];
 
-  const moveTab = (index, direction) => {
-    const newOrder = [...tempTabOrder];
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= newOrder.length) return;
-    [newOrder[index], newOrder[newIndex]] = [newOrder[newIndex], newOrder[index]];
-    setTempTabOrder(newOrder);
+  // Drag and drop handlers
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.outerHTML);
     soundManager.click();
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newOrder = [...tempTabOrder];
+    const [draggedItem] = newOrder.splice(draggedIndex, 1);
+    newOrder.splice(dropIndex, 0, draggedItem);
+    setTempTabOrder(newOrder);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+    soundManager.click();
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  // Touch drag handlers for mobile
+  const touchStartY = useRef(null);
+  const touchedIndex = useRef(null);
+
+  const handleTouchStart = (e, index) => {
+    touchStartY.current = e.touches[0].clientY;
+    touchedIndex.current = index;
+    setDraggedIndex(index);
+  };
+
+  const handleTouchMove = (e) => {
+    if (touchedIndex.current === null) return;
+
+    const touch = e.touches[0];
+    const elements = document.querySelectorAll('[data-tab-item]');
+
+    elements.forEach((el, index) => {
+      const rect = el.getBoundingClientRect();
+      if (touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+        setDragOverIndex(index);
+      }
+    });
+  };
+
+  const handleTouchEnd = () => {
+    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
+      const newOrder = [...tempTabOrder];
+      const [draggedItem] = newOrder.splice(draggedIndex, 1);
+      newOrder.splice(dragOverIndex, 0, draggedItem);
+      setTempTabOrder(newOrder);
+      soundManager.click();
+    }
+
+    touchStartY.current = null;
+    touchedIndex.current = null;
+    setDraggedIndex(null);
+    setDragOverIndex(null);
   };
 
   const saveTabOrder = () => {
@@ -376,46 +450,42 @@ const Settings = ({ state, onResetSystem, onImportData, showNotification, tabOrd
               </button>
             </div>
 
-            <p className="text-gray-500 text-xs mb-3">Use arrows to reorder tabs</p>
+            <p className="text-gray-500 text-xs mb-3">Drag to reorder tabs</p>
 
-            <div className="space-y-2 mb-4">
+            <div className="space-y-2 mb-4" onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
               {tempTabOrder.map((tabId, index) => {
                 const tabInfo = TAB_INFO[tabId];
                 const TabIcon = tabInfo?.icon || Home;
+                const isDragging = draggedIndex === index;
+                const isDragOver = dragOverIndex === index && draggedIndex !== index;
+
                 return (
                   <div
                     key={tabId}
-                    className="flex items-center gap-2 bg-cyber-gray/50 rounded-lg p-2"
+                    data-tab-item
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
+                    onTouchStart={(e) => handleTouchStart(e, index)}
+                    className={`flex items-center gap-2 rounded-lg p-2 cursor-grab active:cursor-grabbing transition-all ${
+                      isDragging
+                        ? 'bg-cyber-cyan/20 opacity-50 scale-95'
+                        : isDragOver
+                          ? 'bg-cyber-cyan/30 border-2 border-cyber-cyan border-dashed'
+                          : 'bg-cyber-gray/50 hover:bg-cyber-gray/70'
+                    }`}
                   >
+                    <div className="text-gray-500 hover:text-cyber-cyan transition-colors p-1">
+                      <GripVertical size={16} />
+                    </div>
                     <span className="text-gray-500 text-xs w-4">{index + 1}</span>
                     <div className="w-7 h-7 rounded bg-cyber-cyan/20 flex items-center justify-center">
                       <TabIcon size={14} className="text-cyber-cyan" />
                     </div>
-                    <span className="text-white text-sm flex-1">{tabInfo?.label || tabId}</span>
-                    <div className="flex flex-col gap-0.5">
-                      <button
-                        onClick={() => moveTab(index, 'up')}
-                        disabled={index === 0}
-                        className={`p-1 rounded transition-all ${
-                          index === 0
-                            ? 'text-gray-700 cursor-not-allowed'
-                            : 'text-gray-400 hover:text-cyber-cyan hover:bg-cyber-cyan/10'
-                        }`}
-                      >
-                        <ChevronUp size={14} />
-                      </button>
-                      <button
-                        onClick={() => moveTab(index, 'down')}
-                        disabled={index === tempTabOrder.length - 1}
-                        className={`p-1 rounded transition-all ${
-                          index === tempTabOrder.length - 1
-                            ? 'text-gray-700 cursor-not-allowed'
-                            : 'text-gray-400 hover:text-cyber-cyan hover:bg-cyber-cyan/10'
-                        }`}
-                      >
-                        <ChevronDown size={14} />
-                      </button>
-                    </div>
+                    <span className="text-white text-sm flex-1 select-none">{tabInfo?.label || tabId}</span>
                   </div>
                 );
               })}
