@@ -3,8 +3,14 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/solo-levelup/',
+  base: process.env.VITE_BASE_PATH || '/solo-levelup/',
   build: {
     outDir: 'dist'
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+    include: ['src/**/*.{test,spec}.{js,jsx}']
   }
 })
