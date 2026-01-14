@@ -1,68 +1,32 @@
-import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  Home,
   Swords,
   Eye,
   Flame,
   ShoppingBag,
-  Plus,
-  Check,
-  X,
-  Trophy,
-  Zap,
-  Coins,
-  Heart,
-  Calendar,
-  Clock,
-  Target,
-  Scroll,
-  Crown,
-  Skull,
-  Star,
   ChevronRight,
   AlertTriangle,
-  Gift,
-  Trash2,
-  Edit3,
-  Save,
-  RefreshCw,
   Shield,
-  Sparkles,
-  Volume2,
-  VolumeX,
   ChevronLeft,
-  User,
-  Crosshair,
-  Download,
-  Smartphone,
-  GripVertical,
-  ChevronUp,
-  ChevronDown,
-  Undo2
-} from 'lucide-react';
+  Smartphone} from 'lucide-react';
 
 // Core constants and configuration
-import { RANKS, QUEST_RANKS, BASE_URL, DAILY_LOGIN_XP, MISSED_DAY_PENALTY, MAX_HEALTH, STREAK_BREAK_PENALTY } from './core/constants';
+import { DAILY_LOGIN_XP, MISSED_DAY_PENALTY } from './core/constants';
 import { getInitialState } from './core/state';
 
 // Utilities
-import { getToday, formatTimeRemaining } from './utils/formatters';
-import { getRank, getNextRank, calculateLevel, calculateXpProgress } from './utils/helpers';
+import { getToday } from './utils/formatters';
+import { getRank } from './utils/helpers';
 import { generateId } from './utils/generators';
 
 // Configuration
-import { TRACKS } from './config/tracks';
-import { REWARD_TIERS, HABIT_ICONS, FALLBACK_QUOTES, TAB_INFO } from './config/rewards';
 
 // Sound system
 import soundManager from './core/SoundManager';
-import SoundContext from './contexts/SoundContext';
 
 // UI Components
-import Particles from './components/ui/Particles';
 import FloatingText from './components/ui/FloatingText';
 import Notification from './components/ui/Notification';
-import Modal from './components/ui/Modal';
 
 // Celebration Components
 import LevelUpCelebration from './components/celebrations/LevelUpCelebration';
@@ -571,13 +535,6 @@ const App = () => {
       };
     });
     showNotification('Quest restored!', 'success');
-  };
-
-  const handleUpdateVision = (vision) => {
-    setState(prev => ({
-      ...prev,
-      vision
-    }));
   };
 
   const handleToggleHabit = (habitId) => {
