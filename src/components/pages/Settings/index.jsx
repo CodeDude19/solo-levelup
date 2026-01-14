@@ -1,23 +1,23 @@
 import React, { useState, useRef } from 'react';
-import { Shield, Volume2, VolumeX, Smartphone, GripVertical, ChevronRight, Download, RefreshCw, AlertTriangle, X, Home, RotateCcw } from 'lucide-react';
+import { Shield, Volume2, VolumeX, Smartphone, GripVertical, ChevronRight, Download, RefreshCw, AlertTriangle, X, Home, RotateCcw, Vibrate } from 'lucide-react';
 import soundManager from '../../../core/SoundManager';
 import { getToday } from '../../../utils/formatters';
-import { FALLBACK_QUOTES, TAB_INFO } from '../../../config/rewards';
+import { TAB_INFO } from '../../../config/rewards';
 
 /**
  * Settings - Preferences, data export/import, system reset, tab order
  */
-const Settings = ({ state, onResetSystem, onImportData, showNotification, tabOrder, onUpdateTabOrder, soundEnabled, onToggleSound, hapticsEnabled, onToggleHaptics }) => {
+const Settings = ({ state, onResetSystem, onImportData, showNotification, tabOrder, onUpdateTabOrder, audioHapticsSettings, onAudioHapticsChange }) => {
   const [resetConfirm, setResetConfirm] = useState('');
   const [showResetWarning, setShowResetWarning] = useState(false);
   const [showTabOrderModal, setShowTabOrderModal] = useState(false);
+  const [showAudioHapticsModal, setShowAudioHapticsModal] = useState(false);
   const [tempTabOrder, setTempTabOrder] = useState(tabOrder || ['home', 'habits', 'quests', 'shop', 'awakening']);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Daily quote - pick one based on the day
-  const todayQuote = FALLBACK_QUOTES[new Date().getDate() % FALLBACK_QUOTES.length];
+  const { soundEnabled, hapticsEnabled, volumeLevel, vibrationStrength } = audioHapticsSettings;
 
   // Drag and drop handlers
   const handleDragStart = (e, index) => {
@@ -271,52 +271,32 @@ const Settings = ({ state, onResetSystem, onImportData, showNotification, tabOrd
         </h2>
       </div>
 
-      {/* Daily Reminder Quote */}
-      <div className="bg-cyber-dark rounded-xl p-3 mb-4 border-l-2 border-cyber-purple">
-        <p className="text-gray-300 text-sm italic leading-relaxed">"{todayQuote.q}"</p>
-        <p className="text-cyber-purple text-xs mt-2 text-right">— {todayQuote.a}</p>
-      </div>
-
       {/* Preferences Section */}
       <div className="mb-4">
         <p className="text-gray-500 text-xs uppercase tracking-wider mb-2 px-1">Preferences</p>
 
-        {/* Sound Toggle */}
+        {/* Audio & Haptics */}
         <button
-          onClick={onToggleSound}
+          onClick={() => {
+            soundManager.click();
+            setShowAudioHapticsModal(true);
+          }}
           className="w-full bg-cyber-dark rounded-lg flex items-center justify-between p-3 hover:bg-cyber-gray/30 transition-all mb-2"
         >
           <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${soundEnabled ? 'bg-cyber-cyan/20' : 'bg-gray-700/50'}`}>
+            <div className="w-8 h-8 rounded-lg bg-cyber-cyan/20 flex items-center justify-center">
               {soundEnabled ? <Volume2 size={16} className="text-cyber-cyan" /> : <VolumeX size={16} className="text-gray-500" />}
             </div>
             <div className="text-left">
-              <p className="text-white text-sm font-medium">Sound Effects</p>
-              <p className="text-gray-500 text-xs">UI sounds and feedback</p>
+              <p className="text-white text-sm font-medium">Audio & Haptics</p>
+              <p className="text-gray-500 text-xs">
+                {soundEnabled ? `Sound Lvl ${volumeLevel}` : 'Sound Off'}
+                {' • '}
+                {hapticsEnabled ? `Vibration Lvl ${vibrationStrength}` : 'Vibration Off'}
+              </p>
             </div>
           </div>
-          <div className={`w-11 h-6 rounded-full relative transition-colors ${soundEnabled ? 'bg-cyber-cyan' : 'bg-gray-700'}`}>
-            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${soundEnabled ? 'left-6' : 'left-1'}`} />
-          </div>
-        </button>
-
-        {/* Vibration Toggle */}
-        <button
-          onClick={onToggleHaptics}
-          className="w-full bg-cyber-dark rounded-lg flex items-center justify-between p-3 hover:bg-cyber-gray/30 transition-all mb-2"
-        >
-          <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${hapticsEnabled ? 'bg-cyber-purple/20' : 'bg-gray-700/50'}`}>
-              <Smartphone size={16} className={hapticsEnabled ? 'text-cyber-purple' : 'text-gray-500'} />
-            </div>
-            <div className="text-left">
-              <p className="text-white text-sm font-medium">Vibration</p>
-              <p className="text-gray-500 text-xs">Haptic feedback on actions</p>
-            </div>
-          </div>
-          <div className={`w-11 h-6 rounded-full relative transition-colors ${hapticsEnabled ? 'bg-cyber-purple' : 'bg-gray-700'}`}>
-            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${hapticsEnabled ? 'left-6' : 'left-1'}`} />
-          </div>
+          <ChevronRight size={16} className="text-gray-500" />
         </button>
 
         {/* Tab Order */}
@@ -573,6 +553,122 @@ const Settings = ({ state, onResetSystem, onImportData, showNotification, tabOrd
                 Save
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Audio & Haptics Modal */}
+      {showAudioHapticsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 animate-fadeIn">
+          <div className="w-full max-w-xs bg-cyber-dark border border-cyber-cyan/30 rounded-xl p-4 animate-modalPop">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display font-bold text-sm text-cyber-cyan flex items-center gap-2">
+                <Volume2 size={16} /> Audio & Haptics
+              </h3>
+              <button
+                onClick={() => {
+                  soundManager.click();
+                  setShowAudioHapticsModal(false);
+                }}
+                className="text-gray-500 hover:text-white p-1"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Sound Section */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  {soundEnabled ? <Volume2 size={18} className="text-cyber-cyan" /> : <VolumeX size={18} className="text-gray-500" />}
+                  <span className="text-white text-sm font-medium">Sound</span>
+                </div>
+                <button
+                  onClick={() => {
+                    soundManager.click();
+                    onAudioHapticsChange({ soundEnabled: !soundEnabled });
+                  }}
+                  className={`w-11 h-6 rounded-full relative transition-colors ${soundEnabled ? 'bg-cyber-cyan' : 'bg-gray-700'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${soundEnabled ? 'left-6' : 'left-1'}`} />
+                </button>
+              </div>
+              {soundEnabled && (
+                <div className="bg-cyber-gray/30 rounded-lg p-3">
+                  <p className="text-gray-400 text-xs mb-2">Volume Level</p>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4].map(level => (
+                      <button
+                        key={level}
+                        onClick={() => {
+                          onAudioHapticsChange({ volumeLevel: level });
+                          soundManager.click();
+                        }}
+                        className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${
+                          volumeLevel === level
+                            ? 'bg-cyber-cyan text-black'
+                            : 'bg-cyber-gray/50 text-gray-400 hover:bg-cyber-gray'
+                        }`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Vibration Section */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Smartphone size={18} className={hapticsEnabled ? 'text-cyber-purple' : 'text-gray-500'} />
+                  <span className="text-white text-sm font-medium">Vibration</span>
+                </div>
+                <button
+                  onClick={() => {
+                    onAudioHapticsChange({ hapticsEnabled: !hapticsEnabled });
+                    soundManager.click();
+                  }}
+                  className={`w-11 h-6 rounded-full relative transition-colors ${hapticsEnabled ? 'bg-cyber-purple' : 'bg-gray-700'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${hapticsEnabled ? 'left-6' : 'left-1'}`} />
+                </button>
+              </div>
+              {hapticsEnabled && (
+                <div className="bg-cyber-gray/30 rounded-lg p-3">
+                  <p className="text-gray-400 text-xs mb-2">Vibration Strength</p>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4].map(level => (
+                      <button
+                        key={level}
+                        onClick={() => {
+                          onAudioHapticsChange({ vibrationStrength: level });
+                          soundManager.vibrate(50);
+                        }}
+                        className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${
+                          vibrationStrength === level
+                            ? 'bg-cyber-purple text-black'
+                            : 'bg-cyber-gray/50 text-gray-400 hover:bg-cyber-gray'
+                        }`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => {
+                soundManager.click();
+                setShowAudioHapticsModal(false);
+              }}
+              className="w-full py-2 rounded-lg bg-cyber-cyan text-black text-sm font-bold btn-press hover:shadow-neon-cyan transition-all"
+            >
+              Done
+            </button>
           </div>
         </div>
       )}

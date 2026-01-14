@@ -7,9 +7,11 @@ class SoundManager {
   constructor() {
     this.audioContext = null;
     this.enabled = true;
-    this.volume = 0.5;
+    this.volume = 0.5; // 0-1 range
+    this.volumeLevel = 2; // 1-4 level (maps to 0.25, 0.5, 0.75, 1.0)
     this.initialized = false;
     this.hapticsEnabled = true;
+    this.vibrationStrength = 2; // 1-4 level (multiplier for pattern durations)
   }
 
   init() {
@@ -34,12 +36,26 @@ class SoundManager {
     this.volume = Math.max(0, Math.min(1, volume));
   }
 
+  setVolumeLevel(level) {
+    this.volumeLevel = Math.max(1, Math.min(4, level));
+    this.volume = this.volumeLevel * 0.25; // Maps 1-4 to 0.25-1.0
+  }
+
+  setVibrationStrength(level) {
+    this.vibrationStrength = Math.max(1, Math.min(4, level));
+  }
+
   // Vibration helper - pattern is array of [vibrate, pause, vibrate, pause, ...]
+  // Strength multiplier adjusts duration (1=0.5x, 2=1x, 3=1.5x, 4=2x)
   vibrate(pattern) {
     if (!this.hapticsEnabled) return;
     if ('vibrate' in navigator) {
       try {
-        navigator.vibrate(pattern);
+        const strengthMultiplier = this.vibrationStrength * 0.5; // 0.5, 1.0, 1.5, 2.0
+        const adjustedPattern = Array.isArray(pattern)
+          ? pattern.map(duration => Math.round(duration * strengthMultiplier))
+          : Math.round(pattern * strengthMultiplier);
+        navigator.vibrate(adjustedPattern);
       } catch (e) {
         // Vibration not supported or blocked
       }

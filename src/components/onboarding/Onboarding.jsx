@@ -123,7 +123,7 @@ const Onboarding = ({ onComplete }) => {
             />
 
             <p className="text-gray-600 text-sm">
-              {playerName ? `Welcome, ${playerName.trim()}` : 'Choose wisely, Hunter.'}
+              {playerName ? `Welcome, ${playerName.trim()}` : 'What\'s your name, Hunter?'}
             </p>
           </div>
         )}

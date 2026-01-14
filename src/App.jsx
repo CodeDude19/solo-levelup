@@ -90,6 +90,14 @@ const App = () => {
     const saved = localStorage.getItem('theSystemHaptics');
     return saved !== 'false';
   });
+  const [volumeLevel, setVolumeLevel] = useState(() => {
+    const saved = localStorage.getItem('theSystemVolumeLevel');
+    return saved ? parseInt(saved, 10) : 2;
+  });
+  const [vibrationStrength, setVibrationStrength] = useState(() => {
+    const saved = localStorage.getItem('theSystemVibrationStrength');
+    return saved ? parseInt(saved, 10) : 2;
+  });
 
   // Tab order
   const defaultTabOrder = ['home', 'habits', 'quests', 'shop', 'awakening'];
@@ -134,14 +142,21 @@ const App = () => {
     localStorage.setItem('theSystemHaptics', hapticsEnabled.toString());
   }, [hapticsEnabled]);
 
-  const toggleSound = () => {
-    setSoundEnabled(prev => !prev);
-    soundManager.click();
-  };
+  useEffect(() => {
+    soundManager.setVolumeLevel(volumeLevel);
+    localStorage.setItem('theSystemVolumeLevel', volumeLevel.toString());
+  }, [volumeLevel]);
 
-  const toggleHaptics = () => {
-    setHapticsEnabled(prev => !prev);
-    soundManager.click();
+  useEffect(() => {
+    soundManager.setVibrationStrength(vibrationStrength);
+    localStorage.setItem('theSystemVibrationStrength', vibrationStrength.toString());
+  }, [vibrationStrength]);
+
+  const handleAudioHapticsChange = (settings) => {
+    if (settings.soundEnabled !== undefined) setSoundEnabled(settings.soundEnabled);
+    if (settings.hapticsEnabled !== undefined) setHapticsEnabled(settings.hapticsEnabled);
+    if (settings.volumeLevel !== undefined) setVolumeLevel(settings.volumeLevel);
+    if (settings.vibrationStrength !== undefined) setVibrationStrength(settings.vibrationStrength);
   };
 
   const handleUpdateTabOrder = (newOrder) => {
@@ -485,7 +500,16 @@ const App = () => {
           <Quests state={state} onAddQuest={handleAddQuest} onCompleteQuest={handleCompleteQuest} onFailQuest={handleFailQuest} onDeleteQuest={handleDeleteQuest} onUndoQuest={handleUndoQuest} showNotification={showNotification} />
         )}
         {activeTab === 'awakening' && (
-          <Settings state={state} onResetSystem={handleResetSystem} onImportData={handleImportData} showNotification={showNotification} tabOrder={customTabOrder} onUpdateTabOrder={handleUpdateTabOrder} soundEnabled={soundEnabled} onToggleSound={toggleSound} hapticsEnabled={hapticsEnabled} onToggleHaptics={toggleHaptics} />
+          <Settings
+            state={state}
+            onResetSystem={handleResetSystem}
+            onImportData={handleImportData}
+            showNotification={showNotification}
+            tabOrder={customTabOrder}
+            onUpdateTabOrder={handleUpdateTabOrder}
+            audioHapticsSettings={{ soundEnabled, hapticsEnabled, volumeLevel, vibrationStrength }}
+            onAudioHapticsChange={handleAudioHapticsChange}
+          />
         )}
         {activeTab === 'habits' && <Habits state={state} onToggleHabit={handleToggleHabit} onAddHabit={handleAddHabit} onDeleteHabit={handleDeleteHabit} showNotification={showNotification} />}
         {activeTab === 'shop' && <Shop state={state} onBuyReward={handleBuyReward} onAddReward={handleAddReward} onDeleteReward={handleDeleteReward} showNotification={showNotification} />}
