@@ -168,21 +168,15 @@ const Quests = forwardRef(({ state, onAddQuest, onCompleteQuest, onFailQuest, on
       )}
 
       {/* Sticky Header */}
-      <div className="flex-shrink-0 px-4 bg-black">
-        <div className="flex items-center justify-between py-4">
-          <h2 className="font-matrix text-2xl text-white flex items-center gap-2">
-            <Swords className="text-cyber-cyan" /> Quests
-          </h2>
-          <button
-            onClick={() => { soundManager.click(); setShowLog(!showLog); }}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
-              showLog ? 'bg-cyber-cyan text-black' : 'bg-cyber-gray text-gray-400'
-            }`}
-          >
-            <BookMarked size={16} /> Log
-          </button>
-        </div>
-
+      <div className="flex-shrink-0 px-4 pt-4 pb-3 bg-black flex justify-end">
+        <button
+          onClick={() => { soundManager.click(); setShowLog(!showLog); }}
+          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
+            showLog ? 'bg-cyber-cyan text-black' : 'bg-cyber-gray text-gray-400'
+          }`}
+        >
+          <BookMarked size={16} /> Log
+        </button>
       </div>
 
       {/* Quest List or Log */}

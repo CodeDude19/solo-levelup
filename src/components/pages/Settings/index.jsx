@@ -254,7 +254,7 @@ const Settings = ({ state, onResetSystem, onImportData, showNotification, tabOrd
   };
 
   return (
-    <div className="h-full overflow-y-auto pb-4 px-4">
+    <div className="h-full overflow-y-auto pb-4 px-4 pt-4">
       {/* Hidden file input for import */}
       <input
         type="file"
@@ -263,13 +263,6 @@ const Settings = ({ state, onResetSystem, onImportData, showNotification, tabOrd
         accept=".json"
         className="hidden"
       />
-
-      {/* Header */}
-      <div className="py-4">
-        <h2 className="font-matrix text-2xl text-white flex items-center gap-2">
-          <Shield className="text-cyber-cyan" /> Settings
-        </h2>
-      </div>
 
       {/* Preferences Section */}
       <div className="mb-4">

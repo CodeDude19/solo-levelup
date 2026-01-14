@@ -161,22 +161,15 @@ const Shop = forwardRef(({ state, onBuyReward, onAddReward, onDeleteReward, show
       )}
 
       {/* Sticky Header */}
-      <div className="flex-shrink-0 px-4 bg-black">
-        <div className="flex items-center justify-between py-4">
-          <h2 className="font-matrix text-2xl text-white flex items-center gap-2">
-            <ShoppingBag className="text-cyber-gold" /> Shop
-          </h2>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => { soundManager.click(); setShowAddModal(true); }}
-              className="bg-cyber-gold text-black px-3 py-1.5 rounded-lg font-bold text-sm flex items-center gap-1.5 btn-press hover:shadow-neon-gold transition-all"
-            >
-              <Save size={14} /> Add Item
-            </button>
-            <div className="bg-cyber-gold/20 text-cyber-gold px-3 py-1.5 rounded-lg font-bold flex items-center gap-1">
-              <Coins size={16} className="animate-coinBounce" /> {state.player.gold}
-            </div>
-          </div>
+      <div className="flex-shrink-0 px-4 pt-4 pb-3 bg-black flex justify-between items-center">
+        <button
+          onClick={() => { soundManager.click(); setShowAddModal(true); }}
+          className="bg-cyber-gold text-black px-3 py-1.5 rounded-lg font-bold text-sm flex items-center gap-1.5 btn-press hover:shadow-neon-gold transition-all"
+        >
+          <Save size={14} /> Add Item
+        </button>
+        <div className="bg-cyber-gold/20 text-cyber-gold px-3 py-1.5 rounded-lg font-bold flex items-center gap-1">
+          <Coins size={16} className="animate-coinBounce" /> {state.player.gold}
         </div>
       </div>
 

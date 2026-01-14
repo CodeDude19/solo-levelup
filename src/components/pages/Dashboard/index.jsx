@@ -211,11 +211,8 @@ const Dashboard = ({ state, onLoginReward, showNotification }) => {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between py-4">
-        <h1 className="font-matrix text-2xl text-white flex items-center gap-2">
-          <Eye className="text-cyber-cyan" size={20} /> Reflect
-        </h1>
-        <p className="text-gray-500 text-[10px] tracking-widest">HUNTER {player.name?.toUpperCase()}</p>
+      <div className="pt-4 pb-2">
+        <p className="text-gray-400 text-sm tracking-widest">HUNTER {player.name?.toUpperCase() || 'UNKNOWN'}</p>
       </div>
 
       {/* Daily Check-in Button */}

@@ -113,14 +113,7 @@ const Habits = forwardRef(({ state, onToggleHabit, onAddHabit, onDeleteHabit, sh
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Sticky Header + Heatmap */}
-      <div className="flex-shrink-0 px-4 bg-black">
-        {/* Header */}
-        <div className="flex items-center justify-between py-4">
-          <h2 className="font-matrix text-2xl text-white flex items-center gap-2">
-            <Dumbbell className="text-cyber-gold" /> Habits
-          </h2>
-        </div>
-
+      <div className="flex-shrink-0 px-4 pt-4 bg-black">
         {/* Heatmap + Stats Row */}
         {state.habits.length > 0 && (
         <div className="flex gap-3 mb-4">
