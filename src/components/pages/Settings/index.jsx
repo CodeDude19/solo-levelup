@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Shield, Volume2, VolumeX, Smartphone, GripVertical, ChevronRight, Download, RefreshCw, AlertTriangle, X, Home } from 'lucide-react';
+import { Shield, Volume2, VolumeX, Smartphone, GripVertical, ChevronRight, Download, RefreshCw, AlertTriangle, X, Home, RotateCcw } from 'lucide-react';
 import soundManager from '../../../core/SoundManager';
 import { getToday } from '../../../utils/formatters';
 import { FALLBACK_QUOTES, TAB_INFO } from '../../../config/rewards';
@@ -210,6 +210,53 @@ const Settings = ({ state, onResetSystem, onImportData, showNotification, tabOrd
     event.target.value = '';
   };
 
+  const handleUpdateApp = async () => {
+    soundManager.click();
+    try {
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          // Check for updates
+          await registration.update();
+
+          // If there's a waiting worker, activate it
+          if (registration.waiting) {
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            showNotification('Update found! Reloading...', 'success');
+            // Wait for the new service worker to take over, then reload
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              window.location.reload();
+            });
+          } else if (registration.installing) {
+            showNotification('Update installing...', 'success');
+            registration.installing.addEventListener('statechange', (e) => {
+              if (e.target.state === 'installed') {
+                registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              window.location.reload();
+            });
+          } else {
+            // No update available, just refresh cache
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+            showNotification('App is up to date! Refreshing...', 'success');
+            setTimeout(() => window.location.reload(), 500);
+          }
+        } else {
+          showNotification('No service worker found', 'error');
+        }
+      } else {
+        showNotification('Service workers not supported', 'error');
+      }
+    } catch (error) {
+      console.error('Update failed:', error);
+      soundManager.error();
+      showNotification('Update check failed', 'error');
+    }
+  };
+
   return (
     <div className="h-full overflow-y-auto pb-4 px-4">
       {/* Hidden file input for import */}
@@ -331,6 +378,28 @@ const Settings = ({ state, onResetSystem, onImportData, showNotification, tabOrd
             <div className="text-left">
               <p className="text-white text-sm font-medium">Import Data</p>
               <p className="text-gray-500 text-xs">Restore from JSON backup</p>
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-gray-500" />
+        </button>
+      </div>
+
+      {/* System Section */}
+      <div className="mb-4">
+        <p className="text-gray-500 text-xs uppercase tracking-wider mb-2 px-1">System</p>
+
+        {/* Update App */}
+        <button
+          onClick={handleUpdateApp}
+          className="w-full bg-cyber-dark rounded-lg flex items-center justify-between p-3 hover:bg-cyber-gray/30 transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-cyber-cyan/20 flex items-center justify-center">
+              <RotateCcw size={16} className="text-cyber-cyan" />
+            </div>
+            <div className="text-left">
+              <p className="text-white text-sm font-medium">Update App</p>
+              <p className="text-gray-500 text-xs">Check for latest version</p>
             </div>
           </div>
           <ChevronRight size={16} className="text-gray-500" />
