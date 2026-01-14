@@ -32,7 +32,9 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
+          // Use relative path to work with any base URL
+          const swPath = new URL('sw.js', window.location.href).href;
+          navigator.serviceWorker.register(swPath)
             .then(reg => console.log('SW registered:', reg.scope))
             .catch(err => console.log('SW registration failed:', err));
         });

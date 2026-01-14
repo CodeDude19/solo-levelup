@@ -214,38 +214,36 @@ const Settings = ({ state, onResetSystem, onImportData, showNotification, tabOrd
     soundManager.click();
     try {
       if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.getRegistration();
-        if (registration) {
-          // Check for updates
-          await registration.update();
+        // Use ready promise which waits for active SW
+        const registration = await navigator.serviceWorker.ready;
 
-          // If there's a waiting worker, activate it
-          if (registration.waiting) {
-            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-            showNotification('Update found! Reloading...', 'success');
-            // Wait for the new service worker to take over, then reload
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-              window.location.reload();
-            });
-          } else if (registration.installing) {
-            showNotification('Update installing...', 'success');
-            registration.installing.addEventListener('statechange', (e) => {
-              if (e.target.state === 'installed') {
-                registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
-              }
-            });
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-              window.location.reload();
-            });
-          } else {
-            // No update available, just refresh cache
-            const cacheNames = await caches.keys();
-            await Promise.all(cacheNames.map(name => caches.delete(name)));
-            showNotification('App is up to date! Refreshing...', 'success');
-            setTimeout(() => window.location.reload(), 500);
-          }
+        // Check for updates
+        await registration.update();
+
+        // If there's a waiting worker, activate it
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          showNotification('Update found! Reloading...', 'success');
+          // Wait for the new service worker to take over, then reload
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
+          });
+        } else if (registration.installing) {
+          showNotification('Update installing...', 'success');
+          registration.installing.addEventListener('statechange', (e) => {
+            if (e.target.state === 'installed') {
+              registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
+          });
         } else {
-          showNotification('No service worker found', 'error');
+          // No update available, just refresh cache
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+          showNotification('App is up to date! Refreshing...', 'success');
+          setTimeout(() => window.location.reload(), 500);
         }
       } else {
         showNotification('Service workers not supported', 'error');
