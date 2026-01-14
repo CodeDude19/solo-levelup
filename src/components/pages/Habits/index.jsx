@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Flame, Plus, Check, Trash2, Eye, Zap, Scroll, Heart, Target, Shield, User, Star } from 'lucide-react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import { Flame, Plus, Check, Trash2, Eye, Zap, Scroll, Heart, Target, Shield, User, Star, Dumbbell } from 'lucide-react';
 import soundManager from '../../../core/SoundManager';
 import { getToday } from '../../../utils/formatters';
 import { generateId } from '../../../utils/generators';
@@ -9,12 +9,17 @@ import Modal from '../../ui/Modal';
 /**
  * Habits - Daily habit tracker with heatmap and streaks
  */
-const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotification }) => {
+const Habits = forwardRef(({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotification }, ref) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newHabit, setNewHabit] = useState('');
   const [newHabitIcon, setNewHabitIcon] = useState('star');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const today = getToday();
+
+  // Expose openAddModal to parent via ref (for FAB)
+  useImperativeHandle(ref, () => ({
+    openAddModal: () => setShowAddModal(true)
+  }));
 
   const handleAddHabit = () => {
     if (!newHabit.trim()) return;
@@ -107,16 +112,8 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
         {/* Header */}
         <div className="flex items-center justify-between py-4">
           <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
-            <Flame className="text-cyber-gold animate-fireFlicker" /> Habits
+            <Dumbbell className="text-cyber-gold" /> Habits
           </h2>
-          {state.habits.length > 0 && (
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-cyber-cyan text-black px-4 py-2 rounded-lg font-bold flex items-center gap-1 btn-press hover:shadow-neon-cyan transition-all"
-            >
-              <Plus size={16} /> Add
-            </button>
-          )}
         </div>
 
         {/* Heatmap + Stats Row */}
@@ -181,7 +178,7 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         {state.habits.length === 0 ? (
           <div className="text-center py-12">
-            <Flame className="mx-auto text-cyber-gold mb-4" size={48} />
+            <Dumbbell className="mx-auto text-cyber-gold mb-4" size={48} />
             <p className="text-white font-bold text-lg mb-1">No Habits Yet</p>
             <p className="text-gray-500 text-sm mb-2">Discipline is forged through repetition.</p>
             <p className="text-gray-600 text-xs italic max-w-[280px] mx-auto mb-6">
@@ -192,7 +189,7 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
               onClick={() => setShowAddModal(true)}
               className="bg-cyber-gold text-black px-6 py-3 rounded-xl font-bold flex items-center gap-2 mx-auto btn-press hover:shadow-neon-gold transition-all"
             >
-              <Flame size={20} /> Forge a Habit
+              <Dumbbell size={20} /> Forge a Habit
             </button>
           </div>
         ) : (
@@ -356,6 +353,8 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
       </Modal>
     </div>
   );
-};
+});
+
+Habits.displayName = 'Habits';
 
 export default Habits;

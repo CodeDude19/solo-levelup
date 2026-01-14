@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Swords,
   Eye,
-  Flame,
+  Dumbbell,
   ShoppingBag,
   AlertTriangle,
   Shield,
@@ -45,7 +45,8 @@ import Notification from './components/ui/Notification';
 
 // Navigation Components
 import SwipeIndicator from './components/navigation/SwipeIndicator';
-import BottomNav from './components/navigation/BottomNav';
+import TopNav from './components/navigation/TopNav';
+import FloatingActionButton from './components/navigation/FloatingActionButton';
 
 // Celebration Components
 import LevelUpCelebration from './components/celebrations/LevelUpCelebration';
@@ -116,6 +117,9 @@ const App = () => {
 
   // Refs
   const navRef = useRef(null);
+  const habitsRef = useRef(null);
+  const questsRef = useRef(null);
+  const shopRef = useRef(null);
   const previousRank = useRef(getRank(state.player.totalXp));
   const previousLevel = useRef(previousRank.current.level);
   const overdueCheckDone = useRef(false);
@@ -304,6 +308,26 @@ const App = () => {
     setState(prev => claimLoginReward(prev, DAILY_LOGIN_XP));
   };
 
+  // FAB action handler
+  const handleFabAction = useCallback((tabId) => {
+    switch (tabId) {
+      case 'home':
+        handleLoginReward();
+        break;
+      case 'habits':
+        habitsRef.current?.openAddModal();
+        break;
+      case 'quests':
+        questsRef.current?.openAddModal();
+        break;
+      case 'shop':
+        shopRef.current?.openAddModal();
+        break;
+      default:
+        break;
+    }
+  }, []);
+
   const handleAddQuest = (quest) => {
     soundManager.success();
     setState(prev => addQuest(prev, quest));
@@ -402,7 +426,7 @@ const App = () => {
   // Tab configuration
   const allTabs = {
     home: { id: 'home', icon: Eye, label: 'Reflect' },
-    habits: { id: 'habits', icon: Flame, label: 'Habits' },
+    habits: { id: 'habits', icon: Dumbbell, label: 'Habits' },
     quests: { id: 'quests', icon: Swords, label: 'Quests' },
     shop: { id: 'shop', icon: ShoppingBag, label: 'Shop' },
     awakening: { id: 'awakening', icon: Shield, label: 'Settings' }
@@ -490,6 +514,9 @@ const App = () => {
         </div>
       )}
 
+      {/* Top Navigation */}
+      <TopNav ref={navRef} tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} swipeProgress={swipeProgress} tabOrder={tabOrder} />
+
       {/* Swipe Indicator */}
       <SwipeIndicator swipeIndicator={swipeIndicator} swipeProgress={swipeProgress} activeTab={activeTab} tabOrder={tabOrder} />
 
@@ -497,7 +524,7 @@ const App = () => {
       <div className="flex-1 min-h-0 overflow-hidden relative" style={{ touchAction: 'pan-y' }} {...swipeHandlers}>
         {activeTab === 'home' && <Dashboard state={state} onLoginReward={handleLoginReward} showNotification={showNotification} />}
         {activeTab === 'quests' && (
-          <Quests state={state} onAddQuest={handleAddQuest} onCompleteQuest={handleCompleteQuest} onFailQuest={handleFailQuest} onDeleteQuest={handleDeleteQuest} onUndoQuest={handleUndoQuest} showNotification={showNotification} />
+          <Quests ref={questsRef} state={state} onAddQuest={handleAddQuest} onCompleteQuest={handleCompleteQuest} onFailQuest={handleFailQuest} onDeleteQuest={handleDeleteQuest} onUndoQuest={handleUndoQuest} showNotification={showNotification} />
         )}
         {activeTab === 'awakening' && (
           <Settings
@@ -511,12 +538,12 @@ const App = () => {
             onAudioHapticsChange={handleAudioHapticsChange}
           />
         )}
-        {activeTab === 'habits' && <Habits state={state} onToggleHabit={handleToggleHabit} onAddHabit={handleAddHabit} onDeleteHabit={handleDeleteHabit} showNotification={showNotification} />}
-        {activeTab === 'shop' && <Shop state={state} onBuyReward={handleBuyReward} onAddReward={handleAddReward} onDeleteReward={handleDeleteReward} showNotification={showNotification} />}
+        {activeTab === 'habits' && <Habits ref={habitsRef} state={state} onToggleHabit={handleToggleHabit} onAddHabit={handleAddHabit} onDeleteHabit={handleDeleteHabit} showNotification={showNotification} />}
+        {activeTab === 'shop' && <Shop ref={shopRef} state={state} onBuyReward={handleBuyReward} onAddReward={handleAddReward} onDeleteReward={handleDeleteReward} showNotification={showNotification} />}
       </div>
 
-      {/* Bottom Navigation */}
-      <BottomNav ref={navRef} tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} swipeProgress={swipeProgress} tabOrder={tabOrder} />
+      {/* Floating Action Button */}
+      <FloatingActionButton activeTab={activeTab} onAction={handleFabAction} state={state} />
     </div>
   );
 };

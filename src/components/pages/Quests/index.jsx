@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Swords, Scroll, Plus, Calendar, Zap, Coins, Check, X, Trash2, Undo2, Skull, Flame, ChevronUp, LayoutList } from 'lucide-react';
 import soundManager from '../../../core/SoundManager';
 import { generateId } from '../../../utils/generators';
@@ -8,7 +8,7 @@ import Modal from '../../ui/Modal';
 /**
  * Quests - Quest management with add, complete, fail, delete, undo
  */
-const Quests = ({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest, onUndoQuest, showNotification }) => {
+const Quests = forwardRef(({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest, onUndoQuest, showNotification }, ref) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -22,6 +22,11 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest
     rank: 'B'
   });
   const dateInputRef = useRef(null);
+
+  // Expose openAddModal to parent via ref (for FAB)
+  useImperativeHandle(ref, () => ({
+    openAddModal: () => setShowAddModal(true)
+  }));
 
   // Get active quests sorted by: earliest due date → threat level → no date last
   const rankOrder = { 'S': 0, 'A': 1, 'B': 2, 'C': 3 };
@@ -163,24 +168,14 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest
           <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
             <Swords className="text-cyber-cyan" /> Quests
           </h2>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowLog(!showLog)}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
-                showLog ? 'bg-cyber-cyan text-black' : 'bg-cyber-gray text-gray-400'
-              }`}
-            >
-              <Scroll size={16} /> Log
-            </button>
-            {allActiveQuests.length > 0 && (
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="bg-cyber-cyan text-black px-4 py-2 rounded-lg font-bold flex items-center gap-1 btn-press hover:shadow-neon-cyan transition-all"
-              >
-                <Plus size={16} /> New
-              </button>
-            )}
-          </div>
+          <button
+            onClick={() => setShowLog(!showLog)}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
+              showLog ? 'bg-cyber-cyan text-black' : 'bg-cyber-gray text-gray-400'
+            }`}
+          >
+            <Scroll size={16} /> Log
+          </button>
         </div>
 
         {/* Quest Filter Tabs */}
@@ -216,10 +211,10 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest
                   } ${count === 0 && !isActive ? 'opacity-50' : ''}`}
                   style={{
                     backgroundColor: isActive ? rank.color : 'transparent',
-                    color: isActive ? '#000' : count > 0 ? rank.color : '#888'
+                    color: isActive ? '#000' : rank.color
                   }}
                 >
-                  {getRankIcon(rank.id, isActive ? '#000' : count > 0 ? rank.color : '#888')}
+                  {getRankIcon(rank.id, isActive ? '#000' : rank.color)}
                   {count > 0 && (
                     <span className={`text-xs ${isActive ? 'text-black/60' : 'opacity-60'}`}>
                       {count}
@@ -330,7 +325,7 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest
                         addLabel: "Daily Duty"
                       },
                       'C': {
-                        icon: <Scroll className="mx-auto mb-4" size={48} style={{ color: '#808080' }} />,
+                        icon: <Scroll className="mx-auto mb-4" size={48} style={{ color: '#ffd700' }} />,
                         title: "C-Rank is clear.",
                         subtitle: "No small tasks lurking?",
                         taunt: "Not even a tiny errand? THE SYSTEM sees all procrastination, Hunter.",
@@ -366,7 +361,7 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest
                         { rank: 'S', label: 'Boss Hunt', desc: 'Critical priority', icon: <Skull size={24} />, color: '#ff3333', bg: 'rgba(255, 51, 51, 0.15)' },
                         { rank: 'A', label: 'Urgent Mission', desc: 'High priority', icon: <Flame size={24} />, color: '#ff6600', bg: 'rgba(255, 102, 0, 0.15)' },
                         { rank: 'B', label: 'Daily Duty', desc: 'Standard task', icon: <Swords size={24} />, color: '#00ffff', bg: 'rgba(0, 255, 255, 0.15)' },
-                        { rank: 'C', label: 'Side Quest', desc: 'When you have time', icon: <Scroll size={24} />, color: '#888888', bg: 'rgba(136, 136, 136, 0.15)' }
+                        { rank: 'C', label: 'Side Quest', desc: 'When you have time', icon: <Scroll size={24} />, color: '#ffd700', bg: 'rgba(255, 215, 0, 0.15)' }
                       ].map(item => (
                         <button
                           key={item.rank}
@@ -609,6 +604,8 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest
       </Modal>
     </div>
   );
-};
+});
+
+Quests.displayName = 'Quests';
 
 export default Quests;

@@ -20,7 +20,7 @@ export const QUEST_RANKS = [
   { id: 'S', name: 'S-Rank', label: 'CRITICAL', color: '#ff3333', bgColor: 'rgba(255, 51, 51, 0.15)', icon: 'skull', description: 'Boss-level priority', multiplier: 2 },
   { id: 'A', name: 'A-Rank', label: 'HIGH', color: '#ff6600', bgColor: 'rgba(255, 102, 0, 0.15)', icon: 'flame', description: 'Urgent quest', multiplier: 1.5 },
   { id: 'B', name: 'B-Rank', label: 'NORMAL', color: '#00ffff', bgColor: 'rgba(0, 255, 255, 0.15)', icon: 'swords', description: 'Standard quest', multiplier: 1 },
-  { id: 'C', name: 'C-Rank', label: 'LOW', color: '#808080', bgColor: 'rgba(128, 128, 128, 0.15)', icon: 'scroll', description: 'When you have time', multiplier: 0.75 }
+  { id: 'C', name: 'C-Rank', label: 'LOW', color: '#ffd700', bgColor: 'rgba(255, 215, 0, 0.15)', icon: 'scroll', description: 'When you have time', multiplier: 0.75 }
 ];
 
 // Game balance constants

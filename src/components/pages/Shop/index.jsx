@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { ShoppingBag, Plus, Coins, Trash2, Gift, Zap, Target, Star, Crown, Sparkles, Swords, Flame } from 'lucide-react';
 import soundManager from '../../../core/SoundManager';
 import { generateId } from '../../../utils/generators';
@@ -9,7 +9,7 @@ import Particles from '../../ui/Particles';
 /**
  * Shop - Rewards shop with tiered categories, buy/add/delete
  */
-const Shop = ({ state, onBuyReward, onAddReward, onDeleteReward, showNotification }) => {
+const Shop = forwardRef(({ state, onBuyReward, onAddReward, onDeleteReward, showNotification }, ref) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPurchaseAnimation, setShowPurchaseAnimation] = useState(false);
   const [purchasedReward, setPurchasedReward] = useState(null);
@@ -18,6 +18,11 @@ const Shop = ({ state, onBuyReward, onAddReward, onDeleteReward, showNotificatio
   const [showIntro, setShowIntro] = useState(() => {
     return !localStorage.getItem('shopIntroSeen');
   });
+
+  // Expose openAddModal to parent via ref (for FAB)
+  useImperativeHandle(ref, () => ({
+    openAddModal: () => setShowAddModal(true)
+  }));
 
   const handleDismissIntro = () => {
     soundManager.click();
@@ -161,16 +166,8 @@ const Shop = ({ state, onBuyReward, onAddReward, onDeleteReward, showNotificatio
           <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
             <ShoppingBag className="text-cyber-gold" /> Shop
           </h2>
-          <div className="flex items-center gap-3">
-            <div className="bg-cyber-gold/20 text-cyber-gold px-3 py-1 rounded-lg font-bold flex items-center gap-1">
-              <Coins size={16} className="animate-coinBounce" /> {state.player.gold}
-            </div>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-cyber-cyan text-black px-3 py-2 rounded-lg font-bold flex items-center gap-1 btn-press hover:shadow-neon-cyan transition-all"
-            >
-              <Plus size={16} />
-            </button>
+          <div className="bg-cyber-gold/20 text-cyber-gold px-3 py-1 rounded-lg font-bold flex items-center gap-1">
+            <Coins size={16} className="animate-coinBounce" /> {state.player.gold}
           </div>
         </div>
       </div>
@@ -323,6 +320,8 @@ const Shop = ({ state, onBuyReward, onAddReward, onDeleteReward, showNotificatio
       </Modal>
     </div>
   );
-};
+});
+
+Shop.displayName = 'Shop';
 
 export default Shop;
