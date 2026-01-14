@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getRank, getNextRank, calculateLevel, calculateXpProgress } from './helpers'
+import { getRank, getNextRank, calculateLevel, calculateXpProgress } from '../../utils/helpers'
 
 describe('getRank', () => {
   it('should return Silver rank for 0 XP', () => {

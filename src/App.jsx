@@ -13,6 +13,20 @@ import {
 // Core constants and configuration
 import { DAILY_LOGIN_XP, MISSED_DAY_PENALTY } from './core/constants';
 import { getInitialState } from './core/state';
+import {
+  addQuest,
+  completeQuest,
+  failQuest,
+  deleteQuest,
+  undoQuest,
+  addHabit,
+  deleteHabit,
+  toggleHabit,
+  addReward,
+  deleteReward,
+  buyReward,
+  claimLoginReward
+} from './core/reducers';
 
 // Utilities
 import { getToday } from './utils/formatters';
@@ -422,60 +436,24 @@ const App = () => {
 
   const handleLoginReward = () => {
     soundManager.checkIn();
-    const today = getToday();
-    setState(prev => ({
-      ...prev,
-      player: {
-        ...prev.player,
-        totalXp: prev.player.totalXp + DAILY_LOGIN_XP,
-        lastLoginDate: today,
-        checkedInToday: true
-      }
-    }));
+    setState(prev => claimLoginReward(prev, DAILY_LOGIN_XP));
   };
 
   const handleAddQuest = (quest) => {
     soundManager.success();
-    setState(prev => ({
-      ...prev,
-      quests: [...prev.quests, quest]
-    }));
+    setState(prev => addQuest(prev, quest));
   };
 
   const handleCompleteQuest = (quest) => {
     soundManager.coin();
     setCelebration({ type: 'quest', quest });
-    setState(prev => ({
-      ...prev,
-      player: {
-        ...prev.player,
-        totalXp: prev.player.totalXp + quest.reward,
-        gold: prev.player.gold + quest.goldReward,
-        totalQuestsCompleted: prev.player.totalQuestsCompleted + 1
-      },
-      quests: prev.quests.filter(q => q.id !== quest.id),
-      questLog: [...prev.questLog, { ...quest, completed: true, completedAt: new Date().toISOString() }]
-    }));
+    setState(prev => completeQuest(prev, quest));
   };
 
   const handleFailQuest = (quest, reason = 'manual') => {
     soundManager.penalty();
     const doublePenalty = quest.penalty * 2;
-    setState(prev => ({
-      ...prev,
-      player: {
-        ...prev.player,
-        totalXp: Math.max(0, prev.player.totalXp - doublePenalty)
-      },
-      quests: prev.quests.filter(q => q.id !== quest.id),
-      questLog: [...prev.questLog, {
-        ...quest,
-        completed: false,
-        penaltyApplied: doublePenalty,
-        completedAt: new Date().toISOString(),
-        failReason: reason
-      }]
-    }));
+    setState(prev => failQuest(prev, quest, reason));
     if (reason === 'overdue') {
       showNotification(`Quest Overdue! -${doublePenalty} XP`, 'error');
     } else {
@@ -484,151 +462,61 @@ const App = () => {
   };
 
   const handleDeleteQuest = (questId) => {
-    setState(prev => ({
-      ...prev,
-      quests: prev.quests.filter(q => q.id !== questId)
-    }));
+    setState(prev => deleteQuest(prev, questId));
   };
 
   const handleUndoQuest = (quest) => {
     soundManager.click();
-    setState(prev => {
-      // Remove from questLog
-      const newQuestLog = prev.questLog.filter(q => q.id !== quest.id);
-
-      // Restore the quest (remove log-specific fields)
-      const restoredQuest = {
-        id: quest.id,
-        name: quest.name,
-        rank: quest.rank,
-        reward: quest.reward,
-        goldReward: quest.goldReward,
-        penalty: quest.penalty,
-        createdAt: quest.createdAt
-      };
-
-      // Reverse XP/gold changes
-      let newTotalXp = prev.player.totalXp;
-      let newGold = prev.player.gold;
-      let newTotalQuestsCompleted = prev.player.totalQuestsCompleted;
-
-      if (quest.completed) {
-        // Was completed - reverse the rewards
-        newTotalXp = Math.max(0, newTotalXp - quest.reward);
-        newGold = Math.max(0, newGold - quest.goldReward);
-        newTotalQuestsCompleted = Math.max(0, newTotalQuestsCompleted - 1);
-      } else {
-        // Was failed - restore the penalty
-        newTotalXp = newTotalXp + quest.penaltyApplied;
-      }
-
-      return {
-        ...prev,
-        player: {
-          ...prev.player,
-          totalXp: newTotalXp,
-          gold: newGold,
-          totalQuestsCompleted: newTotalQuestsCompleted
-        },
-        quests: [...prev.quests, restoredQuest],
-        questLog: newQuestLog
-      };
-    });
+    setState(prev => undoQuest(prev, quest));
     showNotification('Quest restored!', 'success');
   };
 
   const handleToggleHabit = (habitId) => {
-    const today = getToday();
-    const todayHabits = state.habitLog[today] || [];
     const habit = state.habits.find(h => h.id === habitId);
+    const { newState, wasCompleted, xpGain, newStreak } = toggleHabit(state, habitId);
 
-    if (todayHabits.includes(habitId)) {
-      // Remove habit
+    if (wasCompleted) {
+      // Uncompleting
       soundManager.click();
-      setState(prev => ({
-        ...prev,
-        habitLog: {
-          ...prev.habitLog,
-          [today]: prev.habitLog[today].filter(id => id !== habitId)
-        },
-        habitStreaks: {
-          ...prev.habitStreaks,
-          [habitId]: Math.max(0, (prev.habitStreaks[habitId] || 0) - 1)
-        }
-      }));
     } else {
-      // Add habit
+      // Completing
       soundManager.habitComplete();
-      const currentStreak = state.habitStreaks[habitId] || 0;
-      const newStreak = currentStreak + 1;
-      const xpGain = 10 * newStreak;
 
       // Show streak celebration for milestones
       if (newStreak >= 3 && newStreak % 3 === 0) {
         setCelebration({ type: 'streak', streak: newStreak, habitName: habit?.name });
       }
 
-      setState(prev => ({
-        ...prev,
-        player: {
-          ...prev.player,
-          totalXp: prev.player.totalXp + xpGain,
-          gold: prev.player.gold + 5,
-          totalHabitsCompleted: prev.player.totalHabitsCompleted + 1,
-          longestStreak: Math.max(prev.player.longestStreak, newStreak)
-        },
-        habitLog: {
-          ...prev.habitLog,
-          [today]: [...todayHabits, habitId]
-        },
-        habitStreaks: {
-          ...prev.habitStreaks,
-          [habitId]: newStreak
-        }
-      }));
       showNotification(`+${xpGain} XP (${newStreak}x streak!)`, 'success');
     }
+
+    setState(newState);
   };
 
   const handleAddHabit = (habit) => {
     soundManager.success();
-    setState(prev => ({
-      ...prev,
-      habits: [...prev.habits, habit]
-    }));
+    setState(prev => addHabit(prev, habit));
   };
 
   const handleDeleteHabit = (habitId) => {
-    setState(prev => ({
-      ...prev,
-      habits: prev.habits.filter(h => h.id !== habitId)
-    }));
+    setState(prev => deleteHabit(prev, habitId));
   };
 
   const handleBuyReward = (reward) => {
-    soundManager.rewardUnlock();
-    setState(prev => ({
-      ...prev,
-      player: {
-        ...prev.player,
-        gold: prev.player.gold - reward.cost
-      }
-    }));
+    const { newState, success } = buyReward(state, reward);
+    if (success) {
+      soundManager.rewardUnlock();
+      setState(newState);
+    }
   };
 
   const handleAddReward = (reward) => {
     soundManager.success();
-    setState(prev => ({
-      ...prev,
-      rewards: [...prev.rewards, reward]
-    }));
+    setState(prev => addReward(prev, reward));
   };
 
   const handleDeleteReward = (rewardId) => {
-    setState(prev => ({
-      ...prev,
-      rewards: prev.rewards.filter(r => r.id !== rewardId)
-    }));
+    setState(prev => deleteReward(prev, rewardId));
   };
 
   const handleResetSystem = () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { getToday, formatTimeRemaining } from './formatters'
+import { getToday, formatTimeRemaining } from '../../utils/formatters'
 
 describe('getToday', () => {
   beforeEach(() => {

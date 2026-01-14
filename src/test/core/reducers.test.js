@@ -13,7 +13,7 @@ import {
   buyReward,
   claimLoginReward,
   applyMissedDayPenalty
-} from './reducers'
+} from '../../core/reducers'
 
 // Mock base state
 const createBaseState = () => ({
