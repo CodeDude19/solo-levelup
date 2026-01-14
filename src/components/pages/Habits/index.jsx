@@ -109,15 +109,18 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
           <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
             <Flame className="text-cyber-gold animate-fireFlicker" /> Habits
           </h2>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-cyber-cyan text-black px-4 py-2 rounded-lg font-bold flex items-center gap-1 btn-press hover:shadow-neon-cyan transition-all"
-          >
-            <Plus size={16} /> Add
-          </button>
+          {state.habits.length > 0 && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-cyber-cyan text-black px-4 py-2 rounded-lg font-bold flex items-center gap-1 btn-press hover:shadow-neon-cyan transition-all"
+            >
+              <Plus size={16} /> Add
+            </button>
+          )}
         </div>
 
         {/* Heatmap + Stats Row */}
+        {state.habits.length > 0 && (
         <div className="flex gap-3 mb-4">
           {/* Compact Heatmap - Left */}
           <div className="bg-cyber-dark rounded-xl p-3 glow-border-cyan flex-shrink-0">
@@ -171,10 +174,28 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* Scrollable Habits List */}
       <div className="flex-1 overflow-y-auto px-4 pb-4">
+        {state.habits.length === 0 ? (
+          <div className="text-center py-12">
+            <Flame className="mx-auto text-cyber-gold mb-4" size={48} />
+            <p className="text-white font-bold text-lg mb-1">No Habits Yet</p>
+            <p className="text-gray-500 text-sm mb-2">Discipline is forged through repetition.</p>
+            <p className="text-gray-600 text-xs italic max-w-[280px] mx-auto mb-6">
+              "A Hunter's true power comes not from single victories, but from the daily rituals that sharpen the blade."
+            </p>
+
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-cyber-gold text-black px-6 py-3 rounded-xl font-bold flex items-center gap-2 mx-auto btn-press hover:shadow-neon-gold transition-all"
+            >
+              <Flame size={20} /> Forge a Habit
+            </button>
+          </div>
+        ) : (
         <div className="space-y-3">
         {state.habits.map((habit, i) => {
           const completed = isHabitCompletedToday(habit.id);
@@ -263,6 +284,7 @@ const Habits = ({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotificat
           );
         })}
         </div>
+        )}
       </div>
 
       {/* Add Habit Modal */}

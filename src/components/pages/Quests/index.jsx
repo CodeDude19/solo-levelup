@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Swords, Scroll, Plus, Calendar, Zap, Coins, Check, X, Trash2, Undo2, Skull, Flame, ChevronUp } from 'lucide-react';
+import { Swords, Scroll, Plus, Calendar, Zap, Coins, Check, X, Trash2, Undo2, Skull, Flame, ChevronUp, LayoutList } from 'lucide-react';
 import soundManager from '../../../core/SoundManager';
 import { generateId } from '../../../utils/generators';
 import { QUEST_RANKS } from '../../../core/constants';
@@ -12,6 +12,7 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest
   const [showAddModal, setShowAddModal] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [filter, setFilter] = useState('all');
   const [showIntro, setShowIntro] = useState(() => {
     return !localStorage.getItem('questIntroSeen');
   });
@@ -24,7 +25,7 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest
 
   // Get active quests sorted by: earliest due date → threat level → no date last
   const rankOrder = { 'S': 0, 'A': 1, 'B': 2, 'C': 3 };
-  const activeQuests = state.quests
+  const allActiveQuests = state.quests
     .filter(q => !q.completed && !q.failed)
     .sort((a, b) => {
       // Quests with due dates come first, sorted by earliest date
@@ -46,13 +47,18 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest
       return rankA - rankB;
     });
 
+  // Apply filter
+  const activeQuests = filter === 'all'
+    ? allActiveQuests
+    : allActiveQuests.filter(q => q.rank === filter);
+
   const getQuestRankInfo = (rankId) => {
     return QUEST_RANKS.find(r => r.id === rankId) || QUEST_RANKS[2];
   };
 
-  const getRankIcon = (rankId) => {
+  const getRankIcon = (rankId, overrideColor = null) => {
     const rankInfo = getQuestRankInfo(rankId);
-    const iconStyle = { color: rankInfo.color };
+    const iconStyle = { color: overrideColor || rankInfo.color };
     switch (rankId) {
       case 'S': return <Skull size={20} style={iconStyle} />;
       case 'A': return <Flame size={20} style={iconStyle} />;
@@ -160,36 +166,66 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest
           <div className="flex gap-2">
             <button
               onClick={() => setShowLog(!showLog)}
-              className={`px-3 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-1 ${
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
                 showLog ? 'bg-cyber-cyan text-black' : 'bg-cyber-gray text-gray-400'
               }`}
             >
               <Scroll size={16} /> Log
             </button>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-cyber-cyan text-black px-4 py-2 rounded-lg font-bold flex items-center gap-1 btn-press hover:shadow-neon-cyan transition-all"
-            >
-              <Plus size={16} /> New
-            </button>
+            {allActiveQuests.length > 0 && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="bg-cyber-cyan text-black px-4 py-2 rounded-lg font-bold flex items-center gap-1 btn-press hover:shadow-neon-cyan transition-all"
+              >
+                <Plus size={16} /> New
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Threat Level Legend */}
-        {!showLog && activeQuests.length > 0 && (
-          <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
+        {/* Quest Filter Tabs */}
+        {!showLog && allActiveQuests.length > 0 && (
+          <div className="bg-cyber-gray/50 rounded-xl p-1 flex mb-3">
+            {/* All tab */}
+            <button
+              onClick={() => { soundManager.click(); setFilter('all'); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg font-bold text-sm transition-all ${
+                filter === 'all'
+                  ? 'bg-cyber-cyan text-black shadow-lg'
+                  : 'text-gray-400 hover:text-white hover:bg-cyber-gray/50'
+              }`}
+            >
+              <LayoutList size={18} />
+              <span>All</span>
+              <span className={`text-xs ${filter === 'all' ? 'text-black/60' : 'text-gray-500'}`}>
+                {allActiveQuests.length}
+              </span>
+            </button>
+            {/* Rank tabs */}
             {QUEST_RANKS.map(rank => {
-              const count = activeQuests.filter(q => q.rank === rank.id).length;
+              const count = allActiveQuests.filter(q => q.rank === rank.id).length;
+              const isActive = filter === rank.id;
               return (
-                <div
+                <button
                   key={rank.id}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap"
-                  style={{ backgroundColor: rank.bgColor, color: rank.color, opacity: count > 0 ? 1 : 0.4 }}
+                  onClick={() => { soundManager.click(); setFilter(rank.id); }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg font-bold text-sm transition-all ${
+                    isActive
+                      ? 'shadow-lg'
+                      : 'hover:bg-cyber-gray/50'
+                  } ${count === 0 && !isActive ? 'opacity-50' : ''}`}
+                  style={{
+                    backgroundColor: isActive ? rank.color : 'transparent',
+                    color: isActive ? '#000' : count > 0 ? rank.color : '#888'
+                  }}
                 >
-                  {getRankIcon(rank.id)}
-                  <span>{rank.id}</span>
-                  {count > 0 && <span className="opacity-70">({count})</span>}
-                </div>
+                  {getRankIcon(rank.id, isActive ? '#000' : count > 0 ? rank.color : '#888')}
+                  {count > 0 && (
+                    <span className={`text-xs ${isActive ? 'text-black/60' : 'opacity-60'}`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
               );
             })}
           </div>
@@ -203,7 +239,14 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest
           <div className="space-y-3">
             <h3 className="text-gray-400 text-sm uppercase tracking-wider mb-2">Quest Log</h3>
             {state.questLog.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No completed quests yet.</p>
+              <div className="text-center py-12">
+                <Scroll className="mx-auto text-gray-600 mb-4" size={48} />
+                <p className="text-white font-bold mb-1">Your Legend Awaits</p>
+                <p className="text-gray-400 text-sm mb-2">No quests completed yet.</p>
+                <p className="text-gray-600 text-xs italic max-w-[260px] mx-auto">
+                  "Every Shadow Monarch started with a single quest. Your story begins when you take action."
+                </p>
+              </div>
             ) : (
               // Deduplicate - only remove true duplicates (same ID + same completedAt)
               [...new Map(state.questLog.map(q => [`${q.id}-${q.completedAt}`, q])).values()].slice().reverse().map((quest, i) => {
@@ -261,10 +304,84 @@ const Quests = ({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest
           // Active Quests
           <div className="space-y-3">
             {activeQuests.length === 0 ? (
-              <div className="text-center py-12">
-                <Swords className="mx-auto text-gray-600 mb-4 animate-pulse" size={48} />
-                <p className="text-gray-500">No active quests.</p>
-                <p className="text-gray-600 text-sm">Create a quest to begin your journey.</p>
+              <div className="text-center py-10">
+                {filter !== 'all' ? (
+                  (() => {
+                    const emptyMessages = {
+                      'S': {
+                        icon: <Skull className="mx-auto mb-4" size={48} style={{ color: '#ff3333' }} />,
+                        title: "No S-Rank threats detected.",
+                        subtitle: "Really? No boss-level tasks?",
+                        taunt: "Either you're crushing it... or you're hiding from the real challenges. Which is it, Hunter?",
+                        addLabel: "Boss Hunt"
+                      },
+                      'A': {
+                        icon: <Flame className="mx-auto mb-4" size={48} style={{ color: '#ff6600' }} />,
+                        title: "A-Rank queue is empty.",
+                        subtitle: "Suspiciously clean.",
+                        taunt: "No urgent quests? Are you sure you're not just pretending they don't exist?",
+                        addLabel: "Urgent Mission"
+                      },
+                      'B': {
+                        icon: <Swords className="mx-auto mb-4" size={48} style={{ color: '#00ffff' }} />,
+                        title: "No B-Rank quests found.",
+                        subtitle: "The standard queue awaits.",
+                        taunt: "Every hunter has regular duties. What are you avoiding?",
+                        addLabel: "Daily Duty"
+                      },
+                      'C': {
+                        icon: <Scroll className="mx-auto mb-4" size={48} style={{ color: '#808080' }} />,
+                        title: "C-Rank is clear.",
+                        subtitle: "No small tasks lurking?",
+                        taunt: "Not even a tiny errand? THE SYSTEM sees all procrastination, Hunter.",
+                        addLabel: "Side Quest"
+                      }
+                    };
+                    const msg = emptyMessages[filter];
+                    const rankInfo = getQuestRankInfo(filter);
+                    return (
+                      <>
+                        <div className="opacity-60">{msg.icon}</div>
+                        <p className="font-bold text-white mb-1">{msg.title}</p>
+                        <p className="text-gray-400 text-sm mb-3">{msg.subtitle}</p>
+                        <p className="text-gray-500 text-xs italic max-w-[280px] mx-auto mb-4">"{msg.taunt}"</p>
+                        <button
+                          onClick={() => { setShowAddModal(true); setNewQuest(q => ({ ...q, rank: filter })); }}
+                          className="px-4 py-2 rounded-lg font-bold text-sm transition-all"
+                          style={{ backgroundColor: rankInfo.bgColor, color: rankInfo.color }}
+                        >
+                          + Add {msg.addLabel}
+                        </button>
+                      </>
+                    );
+                  })()
+                ) : (
+                  <>
+                    <Swords className="mx-auto text-cyber-cyan mb-3" size={40} />
+                    <p className="text-white font-bold text-lg mb-1">No Active Quests</p>
+                    <p className="text-gray-500 text-sm mb-6">Choose your challenge, Hunter.</p>
+
+                    <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
+                      {[
+                        { rank: 'S', label: 'Boss Hunt', desc: 'Critical priority', icon: <Skull size={24} />, color: '#ff3333', bg: 'rgba(255, 51, 51, 0.15)' },
+                        { rank: 'A', label: 'Urgent Mission', desc: 'High priority', icon: <Flame size={24} />, color: '#ff6600', bg: 'rgba(255, 102, 0, 0.15)' },
+                        { rank: 'B', label: 'Daily Duty', desc: 'Standard task', icon: <Swords size={24} />, color: '#00ffff', bg: 'rgba(0, 255, 255, 0.15)' },
+                        { rank: 'C', label: 'Side Quest', desc: 'When you have time', icon: <Scroll size={24} />, color: '#888888', bg: 'rgba(136, 136, 136, 0.15)' }
+                      ].map(item => (
+                        <button
+                          key={item.rank}
+                          onClick={() => { soundManager.click(); setShowAddModal(true); setNewQuest(q => ({ ...q, rank: item.rank })); }}
+                          className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-transparent hover:scale-105 transition-all btn-press"
+                          style={{ backgroundColor: item.bg, color: item.color }}
+                        >
+                          {item.icon}
+                          <span className="font-bold text-sm">{item.label}</span>
+                          <span className="text-[10px] opacity-60">{item.desc}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
               activeQuests.map((quest, i) => {
