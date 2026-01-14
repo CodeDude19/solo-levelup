@@ -127,7 +127,11 @@ jobs:
             --template-color-primary "#00d4ff" \
             --template-color-secondary "#1a1a2e" \
             --template-button "Unlock" \
-            -o index.html
+            -o encrypted.html
+          rm index.html
+          mv encrypted.html index.html
+          echo "--- Encrypted index.html content preview ---"
+          head -c 500 index.html
 
       - name: Copy dev build to final dist
         if: steps.targets.outputs.build_dev == 'true'
