@@ -24,7 +24,7 @@ This isn't just another todo app. This is your awakening.
 ### Rank Progression System
 - **6 Valorant-inspired ranks:** Silver → Gold → Platinum → Diamond → Immortal → Radiant
 - Earn XP through quests and habits
-- Beautiful rank-up celebrations with sound effects
+- Beautiful rank-up celebrations with sound effects!
 - Power Level tracking that combines XP + streak bonuses
 
 ### Quest System

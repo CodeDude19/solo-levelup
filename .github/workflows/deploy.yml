@@ -2,8 +2,18 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ['main']
+    branches: ['main', 'dev']
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - main
+          - dev
+          - both
 
 permissions:
   contents: read
@@ -18,20 +28,131 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - name: Install dependencies
+      - name: Create output directory
+        run: mkdir -p final-dist
+
+      # Determine what to build
+      - name: Set build targets
+        id: targets
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "build_main=${{ github.event.inputs.branch == 'main' || github.event.inputs.branch == 'both' }}" >> $GITHUB_OUTPUT
+            echo "build_dev=${{ github.event.inputs.branch == 'dev' || github.event.inputs.branch == 'both' }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref_name }}" == "main" ]; then
+            echo "build_main=true" >> $GITHUB_OUTPUT
+            echo "build_dev=false" >> $GITHUB_OUTPUT
+          else
+            echo "build_main=false" >> $GITHUB_OUTPUT
+            echo "build_dev=true" >> $GITHUB_OUTPUT
+          fi
+
+      # === MAIN BRANCH ===
+      - name: Checkout main branch
+        if: steps.targets.outputs.build_main == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-branch
+
+      - name: Install dependencies (main)
+        if: steps.targets.outputs.build_main == 'true'
+        working-directory: main-branch
         run: npm ci
 
-      - name: Build
+      - name: Build main branch
+        if: steps.targets.outputs.build_main == 'true'
+        working-directory: main-branch
         run: npm run build
+        env:
+          VITE_BASE_PATH: '/solo-levelup/'
+
+      - name: Copy main build to final dist
+        if: steps.targets.outputs.build_main == 'true'
+        run: cp -r main-branch/dist/* final-dist/
+
+      - name: Cache main build
+        if: steps.targets.outputs.build_main == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: final-dist
+          key: main-build-${{ github.run_id }}
+
+      # Restore cached main build if not building main
+      - name: Restore main build from cache
+        if: steps.targets.outputs.build_main == 'false'
+        uses: actions/cache/restore@v4
+        with:
+          path: final-dist
+          key: main-build-
+          restore-keys: |
+            main-build-
+
+      # === DEV BRANCH ===
+      - name: Checkout dev branch
+        if: steps.targets.outputs.build_dev == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          path: dev-branch
+
+      - name: Install dependencies (dev)
+        if: steps.targets.outputs.build_dev == 'true'
+        working-directory: dev-branch
+        run: npm ci
+
+      - name: Build dev branch
+        if: steps.targets.outputs.build_dev == 'true'
+        working-directory: dev-branch
+        run: npm run build
+        env:
+          VITE_BASE_PATH: '/solo-levelup/dev/'
+
+      - name: Install staticrypt
+        if: steps.targets.outputs.build_dev == 'true'
+        run: npm install -g staticrypt
+
+      - name: Encrypt dev build with password
+        if: steps.targets.outputs.build_dev == 'true'
+        run: |
+          cd dev-branch/dist
+          staticrypt index.html -p "${{ secrets.DEV_PASSWORD }}" \
+            --short \
+            --template-title "Dev Access" \
+            --template-instructions "Enter password to access dev build" \
+            --template-color-primary "#00d4ff" \
+            --template-color-secondary "#1a1a2e" \
+            --template-button "Unlock"
+          rm index.html
+          mv encrypted/index.html index.html
+          rm -rf encrypted .staticrypt.json
+
+      - name: Copy dev build to final dist
+        if: steps.targets.outputs.build_dev == 'true'
+        run: |
+          mkdir -p final-dist/dev
+          cp -r dev-branch/dist/* final-dist/dev/
+
+      - name: Cache dev build
+        if: steps.targets.outputs.build_dev == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: final-dist/dev
+          key: dev-build-${{ github.run_id }}
+
+      # Restore cached dev build if not building dev
+      - name: Restore dev build from cache
+        if: steps.targets.outputs.build_dev == 'false'
+        uses: actions/cache/restore@v4
+        with:
+          path: final-dist/dev
+          key: dev-build-
+          restore-keys: |
+            dev-build-
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -39,7 +160,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: './final-dist'
 
   deploy:
     environment:
