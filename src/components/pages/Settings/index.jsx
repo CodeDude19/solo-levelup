@@ -239,11 +239,9 @@ const Settings = ({ state, onResetSystem, onImportData, showNotification, tabOrd
             window.location.reload();
           });
         } else {
-          // No update available, just refresh cache
-          const cacheNames = await caches.keys();
-          await Promise.all(cacheNames.map(name => caches.delete(name)));
-          showNotification('App is up to date! Refreshing...', 'success');
-          setTimeout(() => window.location.reload(), 500);
+          // No update available - just show confirmation
+          soundManager.success();
+          showNotification('App is already up to date!', 'success');
         }
       } else {
         showNotification('Service workers not supported', 'error');
