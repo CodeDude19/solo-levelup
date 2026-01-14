@@ -22,7 +22,6 @@ const Onboarding = ({ onComplete }) => {
     'track',
     'explain',
     'vision',
-    'credits',
     'awakening'
   ];
 
@@ -65,9 +64,9 @@ const Onboarding = ({ onComplete }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black flex flex-col">
+    <div className="fixed inset-0 bg-black flex flex-col max-w-[500px] mx-auto">
       {/* Progress dots */}
-      <div className="flex justify-center gap-2 pt-8 pb-4">
+      <div className="flex justify-center gap-2 pt-8 pb-8">
         {steps.map((_, i) => (
           <div
             key={i}
@@ -82,7 +81,7 @@ const Onboarding = ({ onComplete }) => {
         {/* Step: Intro */}
         {step === 0 && (
           <div className="text-center animate-fadeIn">
-            <div className="mb-8">
+            <div className="mb-8 pt-6">
               <div className="w-24 h-24 mx-auto mb-6 rounded-full border-2 border-cyber-cyan/50 flex items-center justify-center animate-pulse-glow">
                 <Eye className="text-cyber-cyan" size={48} />
               </div>
@@ -313,50 +312,8 @@ const Onboarding = ({ onComplete }) => {
           </div>
         )}
 
-        {/* Step: Credits */}
-        {step === 5 && (
-          <div className="animate-fadeIn flex flex-col justify-center items-center flex-1">
-            <div className="text-center">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-2 border-cyber-cyan/50 animate-pulse-glow">
-                <img
-                  src="https://media.licdn.com/dms/image/v2/D4D03AQEaCeHaN-cHzQ/profile-displayphoto-crop_800_800/B4DZjbqFDCGgAI-/0/1756031899355?e=1769644800&v=beta&t=SO7Zsqb1K4h9U1g55pPa4mdgjy6CACrKa9JsPnKunPk"
-                  alt="Yasser Arafat"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              <p className="text-gray-400 text-sm mb-1">Made with</p>
-              <p className="text-cyber-red text-2xl mb-1">❤</p>
-              <p className="text-gray-400 text-sm mb-3">by</p>
-
-              <h2 className="font-display text-2xl font-bold text-cyber-cyan mb-2">
-                Yasser Arafat
-              </h2>
-
-              <a
-                href="https://www.linkedin.com/in/yasserarafat007"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-cyber-cyan/20 text-cyber-cyan px-4 py-2 rounded-lg text-sm font-medium hover:bg-cyber-cyan/30 transition-all"
-                onClick={() => soundManager.click()}
-              >
-                <User size={16} />
-                Connect on LinkedIn
-              </a>
-
-              <div className="mt-6 bg-cyber-dark/50 rounded-xl p-4 border border-cyber-cyan/20">
-                <p className="text-gray-400 text-xs leading-relaxed">
-                  Built with passion to help you level up your life.
-                  <br />
-                  Transform discipline into power. Arise, Hunter.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Step: Ready to Awaken */}
-        {step === 6 && (
+        {step === 5 && (
           <div className="animate-fadeIn text-center flex flex-col justify-center flex-1">
             <Eye className="mx-auto text-cyber-purple mb-4 animate-pulse" size={56} />
             <h2 className="font-display text-xl font-bold text-white mb-2">
@@ -388,7 +345,7 @@ const Onboarding = ({ onComplete }) => {
             (step === 1 && !playerName.trim()) || (step === 2 && !selectedTrack)
               ? 'bg-gray-800 text-gray-600'
               : 'bg-cyber-cyan text-black'
-          }`}
+          } ${step === 0 ? 'mb-11' : ''}`}
         >
           {step === steps.length - 1 ? 'BEGIN AWAKENING' : 'CONTINUE'}
         </button>

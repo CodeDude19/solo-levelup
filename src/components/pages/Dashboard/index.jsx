@@ -212,7 +212,7 @@ const Dashboard = ({ state, onLoginReward, showNotification }) => {
 
       {/* Header */}
       <div className="flex items-center justify-between py-4">
-        <h1 className="font-display text-xl font-black text-white flex items-center gap-2">
+        <h1 className="font-matrix text-2xl text-white flex items-center gap-2">
           <Eye className="text-cyber-cyan" size={20} /> Reflect
         </h1>
         <p className="text-gray-500 text-[10px] tracking-widest">HUNTER {player.name?.toUpperCase()}</p>

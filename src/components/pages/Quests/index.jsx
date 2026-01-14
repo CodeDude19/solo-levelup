@@ -1,5 +1,5 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import { Swords, Scroll, Plus, Calendar, Zap, Coins, Check, X, Trash2, Undo2, Skull, Flame, ChevronUp, LayoutList } from 'lucide-react';
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
+import { Swords, Scroll, Calendar, Zap, Coins, Check, X, Trash2, Undo2, Skull, Flame, BookMarked } from 'lucide-react';
 import soundManager from '../../../core/SoundManager';
 import { generateId } from '../../../utils/generators';
 import { QUEST_RANKS } from '../../../core/constants';
@@ -8,7 +8,7 @@ import Modal from '../../ui/Modal';
 /**
  * Quests - Quest management with add, complete, fail, delete, undo
  */
-const Quests = forwardRef(({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest, onUndoQuest, showNotification }, ref) => {
+const Quests = forwardRef(({ state, onAddQuest, onCompleteQuest, onFailQuest, onDeleteQuest, onUndoQuest, showNotification, onModalChange }, ref) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -23,10 +23,15 @@ const Quests = forwardRef(({ state, onAddQuest, onCompleteQuest, onFailQuest, on
   });
   const dateInputRef = useRef(null);
 
-  // Expose openAddModal to parent via ref (for FAB)
+  // Expose methods to parent via ref (for FAB)
   useImperativeHandle(ref, () => ({
     openAddModal: () => setShowAddModal(true)
   }));
+
+  // Notify parent when modal opens/closes (to hide FAB)
+  useEffect(() => {
+    onModalChange?.(showAddModal);
+  }, [showAddModal, onModalChange]);
 
   // Get active quests sorted by: earliest due date → threat level → no date last
   const rankOrder = { 'S': 0, 'A': 1, 'B': 2, 'C': 3 };
@@ -165,70 +170,23 @@ const Quests = forwardRef(({ state, onAddQuest, onCompleteQuest, onFailQuest, on
       {/* Sticky Header */}
       <div className="flex-shrink-0 px-4 bg-black">
         <div className="flex items-center justify-between py-4">
-          <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
+          <h2 className="font-matrix text-2xl text-white flex items-center gap-2">
             <Swords className="text-cyber-cyan" /> Quests
           </h2>
           <button
-            onClick={() => setShowLog(!showLog)}
+            onClick={() => { soundManager.click(); setShowLog(!showLog); }}
             className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
               showLog ? 'bg-cyber-cyan text-black' : 'bg-cyber-gray text-gray-400'
             }`}
           >
-            <Scroll size={16} /> Log
+            <BookMarked size={16} /> Log
           </button>
         </div>
 
-        {/* Quest Filter Tabs */}
-        {!showLog && allActiveQuests.length > 0 && (
-          <div className="bg-cyber-gray/50 rounded-xl p-1 flex mb-3">
-            {/* All tab */}
-            <button
-              onClick={() => { soundManager.click(); setFilter('all'); }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg font-bold text-sm transition-all ${
-                filter === 'all'
-                  ? 'bg-cyber-cyan text-black shadow-lg'
-                  : 'text-gray-400 hover:text-white hover:bg-cyber-gray/50'
-              }`}
-            >
-              <LayoutList size={18} />
-              <span>All</span>
-              <span className={`text-xs ${filter === 'all' ? 'text-black/60' : 'text-gray-500'}`}>
-                {allActiveQuests.length}
-              </span>
-            </button>
-            {/* Rank tabs */}
-            {QUEST_RANKS.map(rank => {
-              const count = allActiveQuests.filter(q => q.rank === rank.id).length;
-              const isActive = filter === rank.id;
-              return (
-                <button
-                  key={rank.id}
-                  onClick={() => { soundManager.click(); setFilter(rank.id); }}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg font-bold text-sm transition-all ${
-                    isActive
-                      ? 'shadow-lg'
-                      : 'hover:bg-cyber-gray/50'
-                  } ${count === 0 && !isActive ? 'opacity-50' : ''}`}
-                  style={{
-                    backgroundColor: isActive ? rank.color : 'transparent',
-                    color: isActive ? '#000' : rank.color
-                  }}
-                >
-                  {getRankIcon(rank.id, isActive ? '#000' : rank.color)}
-                  {count > 0 && (
-                    <span className={`text-xs ${isActive ? 'text-black/60' : 'opacity-60'}`}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* Quest List or Log */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+      <div className={`flex-1 overflow-y-auto px-4 ${!showLog && allActiveQuests.length > 0 ? 'pb-24' : 'pb-4'}`}>
         {showLog ? (
           // Quest Log
           <div className="space-y-3">
@@ -602,6 +560,54 @@ const Quests = forwardRef(({ state, onAddQuest, onCompleteQuest, onFailQuest, on
           </div>
         </div>
       </Modal>
+
+      {/* Fixed Bottom Filter Tabs - Docked */}
+      {!showLog && allActiveQuests.length > 0 && (
+        <div
+          className="fixed left-0 right-0 z-30 bg-cyber-dark border-t border-white/10 flex gap-1 px-1 pt-2 max-w-[500px] mx-auto"
+          style={{
+            bottom: 0,
+            paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)'
+          }}
+        >
+          {/* All tab */}
+          <button
+            onClick={() => { soundManager.click(); setFilter('all'); }}
+            className={`flex-1 py-2.5 rounded-md transition-all flex items-center justify-center gap-1.5 font-bold text-xs ${
+              filter === 'all'
+                ? 'bg-cyber-cyan/20 text-cyber-cyan'
+                : 'text-gray-600 hover:text-gray-400'
+            }`}
+          >
+            <span>All</span>
+            <span className="text-[10px]">{allActiveQuests.length}</span>
+          </button>
+
+          {/* Rank tabs */}
+          {QUEST_RANKS.map(rank => {
+            const count = allActiveQuests.filter(q => q.rank === rank.id).length;
+            const isActive = filter === rank.id;
+            return (
+              <button
+                key={rank.id}
+                onClick={() => { soundManager.click(); setFilter(rank.id); }}
+                className={`flex-1 py-2.5 rounded-md transition-all flex items-center justify-center gap-1.5 ${
+                  count === 0 && !isActive ? 'opacity-30' : ''
+                }`}
+                style={{
+                  backgroundColor: isActive ? `${rank.color}20` : 'transparent',
+                  color: isActive ? rank.color : '#4b5563'
+                }}
+              >
+                {getRankIcon(rank.id, isActive ? rank.color : '#4b5563')}
+                <span className="text-[10px] font-bold" style={{ color: isActive ? rank.color : '#4b5563' }}>
+                  {count > 0 ? count : '•'}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 });

@@ -26,7 +26,7 @@ const AwakeningSequence = ({ onComplete, playerName }) => {
   }, [onComplete]);
 
   return (
-    <div className={`fixed inset-0 bg-black flex items-center justify-center ${glitching ? 'animate-glitch' : ''}`}>
+    <div className={`fixed inset-0 bg-black flex items-center justify-center max-w-[500px] mx-auto ${glitching ? 'animate-glitch' : ''}`}>
       {phase >= 4 && <Particles type="levelUp" />}
 
       <div className="text-center px-6">

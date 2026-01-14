@@ -1,5 +1,5 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
-import { ShoppingBag, Plus, Coins, Trash2, Gift, Zap, Target, Star, Crown, Sparkles, Swords, Flame } from 'lucide-react';
+import { ShoppingBag, Save, Coins, Trash2, Gift, Zap, Target, Star, Crown, Sparkles, Swords, Flame } from 'lucide-react';
 import soundManager from '../../../core/SoundManager';
 import { generateId } from '../../../utils/generators';
 import { REWARD_TIERS } from '../../../config/rewards';
@@ -19,7 +19,7 @@ const Shop = forwardRef(({ state, onBuyReward, onAddReward, onDeleteReward, show
     return !localStorage.getItem('shopIntroSeen');
   });
 
-  // Expose openAddModal to parent via ref (for FAB)
+  // Expose openAddModal to parent via ref (for FAB - kept for consistency)
   useImperativeHandle(ref, () => ({
     openAddModal: () => setShowAddModal(true)
   }));
@@ -163,11 +163,19 @@ const Shop = forwardRef(({ state, onBuyReward, onAddReward, onDeleteReward, show
       {/* Sticky Header */}
       <div className="flex-shrink-0 px-4 bg-black">
         <div className="flex items-center justify-between py-4">
-          <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
+          <h2 className="font-matrix text-2xl text-white flex items-center gap-2">
             <ShoppingBag className="text-cyber-gold" /> Shop
           </h2>
-          <div className="bg-cyber-gold/20 text-cyber-gold px-3 py-1 rounded-lg font-bold flex items-center gap-1">
-            <Coins size={16} className="animate-coinBounce" /> {state.player.gold}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { soundManager.click(); setShowAddModal(true); }}
+              className="bg-cyber-gold text-black px-3 py-1.5 rounded-lg font-bold text-sm flex items-center gap-1.5 btn-press hover:shadow-neon-gold transition-all"
+            >
+              <Save size={14} /> Add Item
+            </button>
+            <div className="bg-cyber-gold/20 text-cyber-gold px-3 py-1.5 rounded-lg font-bold flex items-center gap-1">
+              <Coins size={16} className="animate-coinBounce" /> {state.player.gold}
+            </div>
           </div>
         </div>
       </div>

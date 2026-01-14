@@ -19,6 +19,7 @@ export default {
       fontFamily: {
         'mono': ['JetBrains Mono', 'Fira Code', 'monospace'],
         'display': ['Orbitron', 'sans-serif'],
+        'matrix': ['Doto', 'monospace'],
       },
       boxShadow: {
         'neon-cyan': '0 0 20px rgba(0, 255, 255, 0.5)',

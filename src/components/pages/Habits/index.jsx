@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { Flame, Plus, Check, Trash2, Eye, Zap, Scroll, Heart, Target, Shield, User, Star, Dumbbell } from 'lucide-react';
 import soundManager from '../../../core/SoundManager';
 import { getToday } from '../../../utils/formatters';
@@ -9,7 +9,7 @@ import Modal from '../../ui/Modal';
 /**
  * Habits - Daily habit tracker with heatmap and streaks
  */
-const Habits = forwardRef(({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotification }, ref) => {
+const Habits = forwardRef(({ state, onToggleHabit, onAddHabit, onDeleteHabit, showNotification, onModalChange }, ref) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newHabit, setNewHabit] = useState('');
   const [newHabitIcon, setNewHabitIcon] = useState('star');
@@ -20,6 +20,11 @@ const Habits = forwardRef(({ state, onToggleHabit, onAddHabit, onDeleteHabit, sh
   useImperativeHandle(ref, () => ({
     openAddModal: () => setShowAddModal(true)
   }));
+
+  // Notify parent when modal opens/closes (to hide FAB)
+  useEffect(() => {
+    onModalChange?.(showAddModal);
+  }, [showAddModal, onModalChange]);
 
   const handleAddHabit = () => {
     if (!newHabit.trim()) return;
@@ -111,7 +116,7 @@ const Habits = forwardRef(({ state, onToggleHabit, onAddHabit, onDeleteHabit, sh
       <div className="flex-shrink-0 px-4 bg-black">
         {/* Header */}
         <div className="flex items-center justify-between py-4">
-          <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
+          <h2 className="font-matrix text-2xl text-white flex items-center gap-2">
             <Dumbbell className="text-cyber-gold" /> Habits
           </h2>
         </div>
@@ -175,7 +180,7 @@ const Habits = forwardRef(({ state, onToggleHabit, onAddHabit, onDeleteHabit, sh
       </div>
 
       {/* Scrollable Habits List */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+      <div className="flex-1 overflow-y-auto px-4 pb-24">
         {state.habits.length === 0 ? (
           <div className="text-center py-12">
             <Dumbbell className="mx-auto text-cyber-gold mb-4" size={48} />

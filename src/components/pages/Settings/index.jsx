@@ -266,7 +266,7 @@ const Settings = ({ state, onResetSystem, onImportData, showNotification, tabOrd
 
       {/* Header */}
       <div className="py-4">
-        <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
+        <h2 className="font-matrix text-2xl text-white flex items-center gap-2">
           <Shield className="text-cyber-cyan" /> Settings
         </h2>
       </div>

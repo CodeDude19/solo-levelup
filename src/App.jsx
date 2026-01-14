@@ -100,6 +100,9 @@ const App = () => {
     return saved ? parseInt(saved, 10) : 2;
   });
 
+  // Modal visibility state (to hide FAB when modal is open)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   // Tab order
   const defaultTabOrder = ['home', 'habits', 'quests', 'shop', 'awakening'];
   const [customTabOrder, setCustomTabOrder] = useState(() => {
@@ -524,7 +527,7 @@ const App = () => {
       <div className="flex-1 min-h-0 overflow-hidden relative" style={{ touchAction: 'pan-y' }} {...swipeHandlers}>
         {activeTab === 'home' && <Dashboard state={state} onLoginReward={handleLoginReward} showNotification={showNotification} />}
         {activeTab === 'quests' && (
-          <Quests ref={questsRef} state={state} onAddQuest={handleAddQuest} onCompleteQuest={handleCompleteQuest} onFailQuest={handleFailQuest} onDeleteQuest={handleDeleteQuest} onUndoQuest={handleUndoQuest} showNotification={showNotification} />
+          <Quests ref={questsRef} state={state} onAddQuest={handleAddQuest} onCompleteQuest={handleCompleteQuest} onFailQuest={handleFailQuest} onDeleteQuest={handleDeleteQuest} onUndoQuest={handleUndoQuest} showNotification={showNotification} onModalChange={setIsModalOpen} />
         )}
         {activeTab === 'awakening' && (
           <Settings
@@ -538,12 +541,12 @@ const App = () => {
             onAudioHapticsChange={handleAudioHapticsChange}
           />
         )}
-        {activeTab === 'habits' && <Habits ref={habitsRef} state={state} onToggleHabit={handleToggleHabit} onAddHabit={handleAddHabit} onDeleteHabit={handleDeleteHabit} showNotification={showNotification} />}
+        {activeTab === 'habits' && <Habits ref={habitsRef} state={state} onToggleHabit={handleToggleHabit} onAddHabit={handleAddHabit} onDeleteHabit={handleDeleteHabit} showNotification={showNotification} onModalChange={setIsModalOpen} />}
         {activeTab === 'shop' && <Shop ref={shopRef} state={state} onBuyReward={handleBuyReward} onAddReward={handleAddReward} onDeleteReward={handleDeleteReward} showNotification={showNotification} />}
       </div>
 
       {/* Floating Action Button */}
-      <FloatingActionButton activeTab={activeTab} onAction={handleFabAction} state={state} />
+      <FloatingActionButton activeTab={activeTab} onAction={handleFabAction} state={state} hidden={isModalOpen} />
     </div>
   );
 };
